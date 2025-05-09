@@ -14,6 +14,7 @@ from .grad_output import GradientOutput, PartialForceOutput, ForceStressOutput
 from .rescale import RescaleOutput
 from .misc import Concat, ApplyFactor, SaveForOutput
 from .utils import scatter, tp_path_exists, with_edge_vectors_
+from .les_energy import LatentEwaldSum, AddEnergy
 
 
 __all__ = [
@@ -35,6 +36,8 @@ __all__ = [
     Concat,
     ApplyFactor,
     SaveForOutput,
+    LatentEwaldSum,
+    AddEnergy,
     scatter,
     tp_path_exists,
     with_edge_vectors_,

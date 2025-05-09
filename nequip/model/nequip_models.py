@@ -13,6 +13,8 @@ from nequip.nn import (
     ConvNetLayer,
     ForceStressOutput,
     ApplyFactor,
+    LatentEwaldSum,
+    AddEnergy,
 )
 from nequip.nn.embedding import (
     NodeTypeEmbed,
@@ -258,6 +260,24 @@ def FullNequIPGNNEnergyModel(
             "per_type_energy_scale_shift": per_type_energy_scale_shift,
         }
     )
+    # === les readout ===
+    latent_charge_readout = ScalarMLP(
+        output_dim=1,
+        bias=False,
+        forward_weight_init=True,
+        field=AtomicDataDict.NODE_FEATURES_KEY,
+        out_field=AtomicDataDict.LATENT_CHARGE_KEY,
+        irreps_in=prev_irreps_out,
+    )
+    modules.update({"latent_charge_readout": latent_charge_readout})
+
+    lr_energy_sum = LatentEwaldSum(
+        #something like this
+        irreps_in=prev_irreps_out,
+        field = AtomicDataDict.LATENT_CHARGE_KEY,
+        out_field = AtomicDataDict.LR_ENERGY_KEY,
+    )
+    modules.update({"lr_energy_sum": lr_energy_sum})
 
     # === pair potentials ===
     prev_irreps_out = per_type_energy_scale_shift.irreps_out
@@ -269,13 +289,23 @@ def FullNequIPGNNEnergyModel(
         modules.update({"pair_potential": pair_potential})
 
     # === sum to total energy ===
-    total_energy_sum = AtomwiseReduce(
+    sr_energy_sum = AtomwiseReduce(
         irreps_in=prev_irreps_out,
         reduce="sum",
         field=AtomicDataDict.PER_ATOM_ENERGY_KEY,
+        out_field=AtomicDataDict.SR_ENERGY_KEY,
+    )
+    modules.update({"sr_energy_sum": sr_energy_sum})
+
+    total_energy_sum = AddEnergy(
+        irreps_in=prev_irreps_out,
+        field1=AtomicDataDict.SR_ENERGY_KEY,
+        field2=AtomicDataDict.LR_ENERGY_KEY,
         out_field=AtomicDataDict.TOTAL_ENERGY_KEY,
     )
     modules.update({"total_energy_sum": total_energy_sum})
+
+    #or I can do total sum when I compute lr_energy, which is better?
 
     # === assemble in SequentialGraphNetwork ===
     return SequentialGraphNetwork(modules)
