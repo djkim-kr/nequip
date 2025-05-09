@@ -64,6 +64,12 @@ PARTIAL_FORCE_KEY: Final[str] = "partial_forces"
 STRESS_KEY: Final[str] = "stress"
 VIRIAL_KEY: Final[str] = "virial"
 
+# LES keys
+# [n_atom, 1] charge of each atom
+LATENT_CHARGE_KEY: Final[str] = "latent_charge" 
+LR_ENERGY_KEY: Final[str] = "lr_energy"
+SR_ENERGY_KEY: Final[str] = "sr_energy"
+
 # misc ase property keys
 # except for "energy", "energies" (handled with key_mapping)
 FREE_ENERGY_KEY: Final[str] = "free_energy"
