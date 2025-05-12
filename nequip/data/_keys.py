@@ -65,6 +65,7 @@ VIRIAL_KEY: Final[str] = "virial"
 LATENT_CHARGE_KEY: Final[str] = "latent_charge" 
 LR_ENERGY_KEY: Final[str] = "lr_energy"
 SR_ENERGY_KEY: Final[str] = "sr_energy"
+BEC_KEY: Final[str] = "BEC"  # Born effective charge
 
 # misc ase property keys
 # except for "energy", "energies" (handled with key_mapping)

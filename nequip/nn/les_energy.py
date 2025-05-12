@@ -14,6 +14,8 @@ class LatentEwaldSum(GraphModuleMixin, torch.nn.Module):
         out_field: Optional[str] = None,
         irreps_in={},
         les_args: dict = {'use_atomwise': False},
+        compute_bec: bool = False,
+        bec_output_index: Optional[int] = None,
     ):
         super().__init__()
         self.field = field
@@ -33,6 +35,8 @@ class LatentEwaldSum(GraphModuleMixin, torch.nn.Module):
                 "Cannot import 'les'. Please install the 'les' library from https://github.com/ChengUCB/les."
                 )
         self.les = Les(les_args)
+        self.compute_bec = compute_bec
+        self.bec_output_index = bec_output_index
 
 
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
@@ -48,11 +52,14 @@ class LatentEwaldSum(GraphModuleMixin, torch.nn.Module):
             batch=batch,
             cell=cell.view(-1, 3, 3),
             compute_energy=True,
-            compute_bec = False, # TODO: make it flexible
-            #TODO: bec_output_index=self.bec_output_index,
+            compute_bec = self.compute_bec,
+            bec_output_index=self.bec_output_index,
         )
 
         les_energy = les_result['E_lr'].unsqueeze(-1) # (n_graphs,1)
+        if self.compute_bec:
+            bec = les_result['BEC']
+            data[AtomicDataDict.BEC_KEY] = bec
 
         data[self.out_field] = les_energy
         return data
