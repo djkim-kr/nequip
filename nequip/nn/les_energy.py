@@ -44,21 +44,30 @@ class LatentEwaldSum(GraphModuleMixin, torch.nn.Module):
         q = data[self.field]
         pos = data[AtomicDataDict.POSITIONS_KEY]
         batch = data.get(AtomicDataDict.BATCH_KEY)
-        cell = data.get(AtomicDataDict.CELL_KEY, None)
+        if batch is None:
+            batch = torch.zeros(pos.shape[0], dtype=pos.dtype, device=pos.device)
+
+        if AtomicDataDict.CELL_KEY in data:
+            cell = data[AtomicDataDict.CELL_KEY].view(-1, 3, 3)
+        else:
+            cell = torch.zeros((len(torch.unique(batch)), 3, 3), 
+                               device=pos.device, dtype=pos.dtype)
 
         les_result = self.les(
             latent_charges=q, 
             positions=pos,
             batch=batch,
-            cell=cell.view(-1, 3, 3),
+            cell=cell,
             compute_energy=True,
             compute_bec = self.compute_bec,
             bec_output_index=self.bec_output_index,
         )
-
-        les_energy = les_result['E_lr'].unsqueeze(-1) # (n_graphs,1)
+        e_lr = les_result['E_lr'] # (n_graphs,)
+        assert e_lr is not None
+        les_energy = e_lr.unsqueeze(-1) # (n_graphs,1)
         if self.compute_bec:
             bec = les_result['BEC']
+            assert bec is not None
             data[AtomicDataDict.BEC_KEY] = bec
 
         data[self.out_field] = les_energy
