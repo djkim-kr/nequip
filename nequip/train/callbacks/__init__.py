@@ -4,6 +4,7 @@ from .loss_coeff_scheduler import LossCoefficientScheduler
 from .loss_coeff_monitor import LossCoefficientMonitor
 from .write_xyz import TestTimeXYZFileWriter
 from .wandb_watch import WandbWatch
+from .les_bec_option import ToggleLESCallback
 
 __all__ = [
     SoftAdapt,
@@ -11,4 +12,5 @@ __all__ = [
     LossCoefficientMonitor,
     TestTimeXYZFileWriter,
     WandbWatch,
+    ToggleLESCallback
 ]

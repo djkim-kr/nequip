@@ -102,6 +102,14 @@ class TestTimeXYZFileWriter(Callback):
             if AtomicDataDict.PBC_KEY in batch:
                 output_out[AtomicDataDict.PBC_KEY] = batch[AtomicDataDict.PBC_KEY]
 
+            if AtomicDataDict.BEC_KEY in output_out:
+                bec = output_out[AtomicDataDict.BEC_KEY]
+                bec_flat = bec.view(bec.shape[0], -1)
+                output_out["LES_BEC"] = bec_flat
+                register_fields(node_fields=["LES_BEC"])
+                self.extra_fields.append("LES_BEC")
+
+
             # append to the file
             ase.io.write(
                 self.out_file + f"_dataset{dataloader_idx}.xyz",
