@@ -8,6 +8,7 @@ from .loss_coeff_monitor import LossCoefficientMonitor
 from .write_xyz import TestTimeXYZFileWriter
 from .wandb_watch import WandbWatch
 from .tf32_scheduler import TF32Scheduler
+from .les_bec_option import ToggleLESCallback
 
 __all__ = [
     SoftAdapt,
@@ -17,4 +18,5 @@ __all__ = [
     TF32Scheduler,
     TestTimeXYZFileWriter,
     WandbWatch,
+    ToggleLESCallback
 ]

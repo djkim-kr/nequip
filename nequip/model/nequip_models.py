@@ -152,6 +152,8 @@ def FullNequIPGNNEnergyModel(
     # long-range (les library)
     use_les: bool = False,
     les_args: Optional[Dict] = None,
+    compute_bec: bool = False,
+    bec_output_index: Optional[int] = None,
 
     # == things that generally shouldn't be changed ==
     # convnet
@@ -324,6 +326,9 @@ def FullNequIPGNNEnergyModel(
             irreps_in=prev_irreps_out,
             field = AtomicDataDict.LATENT_CHARGE_KEY,
             out_field = AtomicDataDict.LR_ENERGY_KEY,
+            les_args=les_args,
+            compute_bec=compute_bec,
+            bec_output_index=bec_output_index,
         )
 
         total_energy_sum = AddEnergy(
