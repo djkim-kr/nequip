@@ -109,6 +109,13 @@ class TestTimeXYZFileWriter(Callback):
                 output_out["LES_BEC"] = bec_flat
                 register_fields(node_fields=["LES_BEC"])
                 self.extra_fields.append("LES_BEC")
+            
+            if AtomicDataDict.LATENT_CHARGE_KEY in output_out:
+                latent_charge = output_out[AtomicDataDict.LATENT_CHARGE_KEY]
+                latent_charge_flat = latent_charge.view(latent_charge.shape[0], -1)
+                output_out["q"] = latent_charge_flat
+                register_fields(node_fields=["q"])
+                self.extra_fields.append("q")
 
 
             # append to the file
