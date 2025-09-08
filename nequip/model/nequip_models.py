@@ -137,7 +137,7 @@ def FullNequIPGNNModel(
     bessel_trainable: bool = False,
     polynomial_cutoff_p: int = 6,
     # edge sum normalization
-    avg_num_neighbors: Optional[float] = None,
+    avg_num_neighbors: Union[float, dict[str, float], None] = None,
     # per atom energy params
     per_type_energy_scales: Optional[Union[float, Sequence[float]]] = None,
     per_type_energy_shifts: Optional[Union[float, Sequence[float]]] = None,
@@ -175,7 +175,7 @@ def FullNequIPGNNModel(
 
     if avg_num_neighbors is None:
         warnings.warn(
-            "Found `avg_num_neighbors=None` -- it is recommended to set `avg_num_neighbors` for normalization and better numerics during training."
+            "Found `avg_num_neighbors=None`-- it is recommended to set `avg_num_neighbors` for normalization and better numerics during training."
         )
     if per_type_energy_scales is None:
         warnings.warn(
@@ -240,6 +240,7 @@ def FullNequIPGNNModel(
                 "radial_mlp_depth": radial_mlp_depth[layer_i],
                 "radial_mlp_width": radial_mlp_width[layer_i],
                 "avg_num_neighbors": avg_num_neighbors,
+                "type_names": type_names,
                 # to ensure isolated atom limit
                 "use_sc": layer_i != 0,
                 "is_first_layer": layer_i == 0,

@@ -1,6 +1,5 @@
 # This file is a part of the `nequip` package. Please see LICENSE and README at the root for information on using it.
 """Interaction Block"""
-
 from math import sqrt
 import torch
 
@@ -15,7 +14,7 @@ from .mlp import ScalarMLPFunction
 from ._ghost_exchange_base import NoOpGhostExchangeModule
 from ._tp_scatter_base import TensorProductScatter
 
-from typing import Optional
+from typing import Optional, Union, List
 
 
 class InteractionBlock(GraphModuleMixin, torch.nn.Module):
@@ -27,7 +26,8 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         irreps_out,
         radial_mlp_depth: int = 1,
         radial_mlp_width: int = 8,
-        avg_num_neighbors: Optional[float] = None,
+        avg_num_neighbors: Union[float, dict[str, float], None] = None,
+        type_names: List[str] = None,
         use_sc: bool = True,
         is_first_layer: bool = False,
     ) -> None:
@@ -38,7 +38,8 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
             irreps_out: output irreps
             radial_mlp_depth (int): number of radial layers
             radial_mlp_width (int): number of hidden neurons in radial function
-            avg_num_neighbors (float) : number of neighbors to divide by (default ``None``, i.e. no normalization)
+            avg_num_neighbors (float or dict): number of neighbors to divide by (default ``None``, i.e. no normalization)
+            type_names (List[str]): list of type names
             use_sc (bool): use self-connection or not
         """
         super().__init__()
@@ -65,9 +66,26 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         )
 
         # === normalization ===
-        self.scatter_norm_factor: Optional[float] = None
-        if avg_num_neighbors is not None:
-            self.scatter_norm_factor = 1.0 / sqrt(avg_num_neighbors)
+        if isinstance(avg_num_neighbors, float):
+            avg_num_neighbors = [avg_num_neighbors] * len(type_names)
+        elif isinstance(avg_num_neighbors, dict):
+            assert set(type_names) == set(avg_num_neighbors.keys())
+            avg_num_neighbors = [avg_num_neighbors[k] for k in type_names]
+        else:
+            raise RuntimeError(
+                "Unrecognized format for `avg_num_neighbors`, only floats or dicts allowed."
+            )
+        assert (
+            isinstance(avg_num_neighbors, list)
+            and len(avg_num_neighbors) == len(type_names)
+        )
+        self.norm_shortcut = len(type_names) == 1
+
+        scatter_norm_factor = torch.tensor(
+            [(1.0 / sqrt(N)) for N in avg_num_neighbors]
+        )
+        scatter_norm_factor = scatter_norm_factor.reshape(-1, 1)
+        self.register_buffer("scatter_norm_factor", scatter_norm_factor)
 
         self.use_sc = use_sc
 
@@ -174,10 +192,13 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         x = self.linear_1(x)
 
         # normalize before TP-scatter
-        # necessary to get TorchScript to be able to type infer when its not None
-        alpha: Optional[float] = self.scatter_norm_factor
-        if alpha is not None:
-            x = alpha * x
+        if self.norm_shortcut:
+            scatter_norm = self.scatter_norm_factor
+        else:
+            scatter_norm = torch.nn.functional.embedding(
+                data[AtomicDataDict.ATOM_TYPE_KEY][:num_local_nodes], self.scatter_norm_factor
+            )
+        x *= scatter_norm
 
         # === comms for ghost-exchange ===
         # only done if not first layer
