@@ -13,8 +13,9 @@ from ._graph_mixin import GraphModuleMixin
 from .mlp import ScalarMLPFunction
 from ._ghost_exchange_base import NoOpGhostExchangeModule
 from ._tp_scatter_base import TensorProductScatter
+from nequip.nn.norm import AvgNumNeighborsNorm
 
-from typing import Optional, Union, List
+from typing import Optional, Union, Sequence
 
 
 class InteractionBlock(GraphModuleMixin, torch.nn.Module):
@@ -27,7 +28,7 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         radial_mlp_depth: int = 1,
         radial_mlp_width: int = 8,
         avg_num_neighbors: Union[float, dict[str, float], None] = None,
-        type_names: List[str] = None,
+        type_names: Sequence[str] = None,
         use_sc: bool = True,
         is_first_layer: bool = False,
     ) -> None:
@@ -66,26 +67,10 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         )
 
         # === normalization ===
-        if isinstance(avg_num_neighbors, float):
-            avg_num_neighbors = [avg_num_neighbors] * len(type_names)
-        elif isinstance(avg_num_neighbors, dict):
-            assert set(type_names) == set(avg_num_neighbors.keys())
-            avg_num_neighbors = [avg_num_neighbors[k] for k in type_names]
-        else:
-            raise RuntimeError(
-                "Unrecognized format for `avg_num_neighbors`, only floats or dicts allowed."
-            )
-        assert (
-            isinstance(avg_num_neighbors, list)
-            and len(avg_num_neighbors) == len(type_names)
+        self.avg_num_neighbors_norm = AvgNumNeighborsNorm(
+            avg_num_neighbors=avg_num_neighbors,
+            type_names=type_names
         )
-        self.norm_shortcut = len(type_names) == 1
-
-        scatter_norm_factor = torch.tensor(
-            [(1.0 / sqrt(N)) for N in avg_num_neighbors]
-        )
-        scatter_norm_factor = scatter_norm_factor.reshape(-1, 1)
-        self.register_buffer("scatter_norm_factor", scatter_norm_factor)
 
         self.use_sc = use_sc
 
@@ -192,13 +177,8 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         x = self.linear_1(x)
 
         # normalize before TP-scatter
-        if self.norm_shortcut:
-            scatter_norm = self.scatter_norm_factor
-        else:
-            scatter_norm = torch.nn.functional.embedding(
-                data[AtomicDataDict.ATOM_TYPE_KEY][:num_local_nodes], self.scatter_norm_factor
-            )
-        x *= scatter_norm
+        scatter_norm = self.avg_num_neighbors_norm(data, num_local_nodes)
+        x = x * scatter_norm
 
         # === comms for ghost-exchange ===
         # only done if not first layer
