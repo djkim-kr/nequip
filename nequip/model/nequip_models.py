@@ -13,6 +13,7 @@ from nequip.nn import (
     ConvNetLayer,
     ForceStressOutput,
     ApplyFactor,
+    AvgNumNeighborsNorm,
 )
 from nequip.nn.embedding import (
     NodeTypeEmbed,
@@ -57,7 +58,7 @@ def NequIPGNNModel(
         num_bessels (int): number of Bessel basis functions (default ``8``)
         bessel_trainable (bool): whether the Bessel roots are trainable (default ``False``)
         polynomial_cutoff_p (int): p-exponent used in polynomial cutoff function, smaller p corresponds to stronger decay with distance (default ``6``)
-        avg_num_neighbors (float): used to normalize edge sums for better numerics (default ``None``)
+        avg_num_neighbors (float/Dict[str, float]): used to normalize edge sums for better numerics (default ``None``)
         per_type_energy_scales (float/List[float]): per-atom energy scales, which could be derived from the force RMS of the data (default ``None``)
         per_type_energy_shifts (float/List[float]): per-atom energy shifts, which should generally be isolated atom reference energies or estimated from average per-atom energies of the data (default ``None``)
         per_type_energy_scales_trainable (bool): whether the per-atom energy scales are trainable (default ``False``)
@@ -137,7 +138,7 @@ def FullNequIPGNNModel(
     bessel_trainable: bool = False,
     polynomial_cutoff_p: int = 6,
     # edge sum normalization
-    avg_num_neighbors: Union[float, dict[str, float], None] = None,
+    avg_num_neighbors: Union[float, Dict[str, float]] = None,
     # per atom energy params
     per_type_energy_scales: Optional[Union[float, Sequence[float]]] = None,
     per_type_energy_shifts: Optional[Union[float, Sequence[float]]] = None,
@@ -155,9 +156,9 @@ def FullNequIPGNNModel(
 ) -> GraphModel:
     """NequIP GNN model that predicts energies based on a more extensive set of arguments."""
     # === sanity checks and warnings ===
-    assert all(tn.isalnum() for tn in type_names), (
-        "`type_names` must contain only alphanumeric characters"
-    )
+    assert all(
+        tn.isalnum() for tn in type_names
+    ), "`type_names` must contain only alphanumeric characters"
 
     # require every convnet layer to be specified explicitly in a list
     # infer num_layers from the list size
@@ -231,6 +232,13 @@ def FullNequIPGNNModel(
     }
     prev_irreps_out = factor.irreps_out
 
+    # === normalization module ===
+    avg_num_neighbors_norm = None
+    if avg_num_neighbors is not None:
+        avg_num_neighbors_norm = AvgNumNeighborsNorm(
+            avg_num_neighbors=avg_num_neighbors, type_names=type_names
+        )
+
     # === convnet layers ===
     for layer_i in range(num_layers):
         current_convnet = ConvNetLayer(
@@ -239,8 +247,7 @@ def FullNequIPGNNModel(
             convolution_kwargs={
                 "radial_mlp_depth": radial_mlp_depth[layer_i],
                 "radial_mlp_width": radial_mlp_width[layer_i],
-                "avg_num_neighbors": avg_num_neighbors,
-                "type_names": type_names,
+                "avg_num_neighbors_norm": avg_num_neighbors_norm,
                 # to ensure isolated atom limit
                 "use_sc": layer_i != 0,
                 "is_first_layer": layer_i == 0,

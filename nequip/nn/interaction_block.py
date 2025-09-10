@@ -1,6 +1,5 @@
 # This file is a part of the `nequip` package. Please see LICENSE and README at the root for information on using it.
 """Interaction Block"""
-from math import sqrt
 import torch
 
 from e3nn.o3._irreps import Irreps
@@ -13,9 +12,8 @@ from ._graph_mixin import GraphModuleMixin
 from .mlp import ScalarMLPFunction
 from ._ghost_exchange_base import NoOpGhostExchangeModule
 from ._tp_scatter_base import TensorProductScatter
-from nequip.nn.norm import AvgNumNeighborsNorm
 
-from typing import Optional, Union, Sequence
+from typing import Optional
 
 
 class InteractionBlock(GraphModuleMixin, torch.nn.Module):
@@ -27,8 +25,7 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         irreps_out,
         radial_mlp_depth: int = 1,
         radial_mlp_width: int = 8,
-        avg_num_neighbors: Union[float, dict[str, float], None] = None,
-        type_names: Sequence[str] = None,
+        avg_num_neighbors_norm: Optional[torch.nn.Module] = None,
         use_sc: bool = True,
         is_first_layer: bool = False,
     ) -> None:
@@ -39,7 +36,7 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
             irreps_out: output irreps
             radial_mlp_depth (int): number of radial layers
             radial_mlp_width (int): number of hidden neurons in radial function
-            avg_num_neighbors (float or dict): number of neighbors to divide by (default ``None``, i.e. no normalization)
+            avg_num_neighbors_norm (torch.nn.Module): module for normalization (default ``None``, i.e. no normalization)
             type_names (List[str]): list of type names
             use_sc (bool): use self-connection or not
         """
@@ -67,10 +64,7 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         )
 
         # === normalization ===
-        self.avg_num_neighbors_norm = AvgNumNeighborsNorm(
-            avg_num_neighbors=avg_num_neighbors,
-            type_names=type_names
-        )
+        self.avg_num_neighbors_norm = avg_num_neighbors_norm
 
         self.use_sc = use_sc
 
@@ -177,8 +171,9 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         x = self.linear_1(x)
 
         # normalize before TP-scatter
-        scatter_norm = self.avg_num_neighbors_norm(data, num_local_nodes)
-        x = x * scatter_norm
+        if self.avg_num_neighbors_norm is not None:
+            scatter_norm = self.avg_num_neighbors_norm(data, num_local_nodes)
+            x = x * scatter_norm
 
         # === comms for ghost-exchange ===
         # only done if not first layer
