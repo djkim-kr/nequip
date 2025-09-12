@@ -21,7 +21,7 @@ class AvgNumNeighborsNorm(torch.nn.Module):
 
         # If global avg_num_neighbors or only one type, no need to do embedding lookup in forward
         self.norm_shortcut = len(type_names) == 1 or isinstance(
-            avg_num_neighbors, (float,int)
+            avg_num_neighbors, (float, int)
         )
 
         # Put avg_num_neighbors in a list (global or per type)
