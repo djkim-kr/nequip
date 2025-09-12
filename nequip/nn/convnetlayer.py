@@ -10,8 +10,10 @@ from ._graph_mixin import GraphModuleMixin
 from .interaction_block import InteractionBlock
 from .nonlinearities import shifted_softplus
 from .utils import tp_path_exists
+from .norm import AvgNumNeighborsNorm
 
-from typing import Dict, Callable
+
+from typing import Dict, Callable, Union, Sequence
 
 
 acts = {
@@ -40,6 +42,8 @@ class ConvNetLayer(GraphModuleMixin, torch.nn.Module):
         nonlinearity_type: str = "gate",
         nonlinearity_scalars: Dict[int, Callable] = {"e": "silu", "o": "tanh"},
         nonlinearity_gates: Dict[int, Callable] = {"e": "silu", "o": "tanh"},
+        avg_num_neighbors: Union[float, Dict[str, float]] = None,
+        type_names: Sequence[str] = None,
     ):
         super().__init__()
         # initialization
@@ -130,6 +134,13 @@ class ConvNetLayer(GraphModuleMixin, torch.nn.Module):
             self.resnet = False
 
         # TODO: last convolution should go to explicit irreps out
+
+        # === normalization module ===
+        avg_num_neighbors_norm = AvgNumNeighborsNorm(
+            avg_num_neighbors=avg_num_neighbors, type_names=type_names
+        )
+        # Add to convolution_kwargs dict
+        convolution_kwargs["avg_num_neighbors_norm"] = avg_num_neighbors_norm
 
         # override defaults for irreps:
         convolution_kwargs.pop("irreps_in", None)

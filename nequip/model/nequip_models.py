@@ -13,7 +13,6 @@ from nequip.nn import (
     ConvNetLayer,
     ForceStressOutput,
     ApplyFactor,
-    AvgNumNeighborsNorm,
 )
 from nequip.nn.embedding import (
     NodeTypeEmbed,
@@ -174,10 +173,6 @@ def FullNequIPGNNModel(
         f"last convnet layer output must only contain scalars but found {feature_irreps_hidden[-1]}"
     )
 
-    if avg_num_neighbors is None:
-        warnings.warn(
-            "Found `avg_num_neighbors=None`-- it is recommended to set `avg_num_neighbors` for normalization and better numerics during training."
-        )
     if per_type_energy_scales is None:
         warnings.warn(
             "Found `per_type_energy_scales=None` -- it is recommended to set `per_type_energy_scales` for better numerics during training."
@@ -232,13 +227,6 @@ def FullNequIPGNNModel(
     }
     prev_irreps_out = factor.irreps_out
 
-    # === normalization module ===
-    avg_num_neighbors_norm = None
-    if avg_num_neighbors is not None:
-        avg_num_neighbors_norm = AvgNumNeighborsNorm(
-            avg_num_neighbors=avg_num_neighbors, type_names=type_names
-        )
-
     # === convnet layers ===
     for layer_i in range(num_layers):
         current_convnet = ConvNetLayer(
@@ -247,7 +235,6 @@ def FullNequIPGNNModel(
             convolution_kwargs={
                 "radial_mlp_depth": radial_mlp_depth[layer_i],
                 "radial_mlp_width": radial_mlp_width[layer_i],
-                "avg_num_neighbors_norm": avg_num_neighbors_norm,
                 # to ensure isolated atom limit
                 "use_sc": layer_i != 0,
                 "is_first_layer": layer_i == 0,
@@ -256,6 +243,8 @@ def FullNequIPGNNModel(
             nonlinearity_type=convnet_nonlinearity_type,
             nonlinearity_scalars=convnet_nonlinearity_scalars,
             nonlinearity_gates=convnet_nonlinearity_gates,
+            avg_num_neighbors=avg_num_neighbors,
+            type_names=type_names,
         )
         prev_irreps_out = current_convnet.irreps_out
         modules.update({f"layer{layer_i}_convnet": current_convnet})

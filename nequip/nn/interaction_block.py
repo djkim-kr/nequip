@@ -171,9 +171,8 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         x = self.linear_1(x)
 
         # normalize before TP-scatter
-        if self.avg_num_neighbors_norm is not None:
-            scatter_norm = self.avg_num_neighbors_norm(data, num_local_nodes)
-            x = x * scatter_norm
+        scatter_norm = self.avg_num_neighbors_norm(data)
+        x = x * scatter_norm[:num_local_nodes]
 
         # === comms for ghost-exchange ===
         # only done if not first layer
