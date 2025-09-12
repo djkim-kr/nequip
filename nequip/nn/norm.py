@@ -25,7 +25,7 @@ class AvgNumNeighborsNorm(torch.nn.Module):
         )
 
         # Put avg_num_neighbors in a list (global or per type)
-        if isinstance(avg_num_neighbors, float):
+        if isinstance(avg_num_neighbors, (float, int)):
             avg_num_neighbors = [avg_num_neighbors]
         elif isinstance(avg_num_neighbors, dict):
             assert set(type_names) == set(avg_num_neighbors.keys())
