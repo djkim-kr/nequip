@@ -3,6 +3,7 @@ from typing import Union, Sequence, Dict
 from math import sqrt
 from nequip.data import AtomicDataDict
 
+
 class AvgNumNeighborsNorm(torch.nn.Module):
     def __init__(
         self,
@@ -19,7 +20,9 @@ class AvgNumNeighborsNorm(torch.nn.Module):
         assert avg_num_neighbors is not None, "avg_num_neighbors must be specified"
 
         # If global avg_num_neighbors or only one type, no need to do embedding lookup in forward
-        self.norm_shortcut = (len(type_names) == 1 or isinstance(avg_num_neighbors, float))
+        self.norm_shortcut = len(type_names) == 1 or isinstance(
+            avg_num_neighbors, float
+        )
 
         # Put avg_num_neighbors in a list (global or per type)
         if isinstance(avg_num_neighbors, float):
@@ -38,16 +41,18 @@ class AvgNumNeighborsNorm(torch.nn.Module):
         scatter_norm_factor = scatter_norm_factor.reshape(-1, 1)
         # Persistent=False to ensure backwards compatibility of FMs.
         # TODO remove this once we're sure FMs are not using this anymore
-        self.register_buffer("scatter_norm_factor", scatter_norm_factor, persistent=False)
+        self.register_buffer(
+            "scatter_norm_factor", scatter_norm_factor, persistent=False
+        )
 
     def forward(self, data: AtomicDataDict.Type) -> torch.Tensor:
         if self.norm_shortcut:
             # No need to do embedding lookup in forward
-            scatter_norm = self.scatter_norm_factor # shape: (1, 1)
+            scatter_norm = self.scatter_norm_factor  # shape: (1, 1)
         else:
             # Embed each avg_num_neighbors value per type and reshape to (num_local_nodes, 1)
             scatter_norm = torch.nn.functional.embedding(
                 data[AtomicDataDict.ATOM_TYPE_KEY],
                 self.scatter_norm_factor,
-            ) # shape: (num_local_nodes, 1)
+            )  # shape: (num_local_nodes, 1)
         return scatter_norm

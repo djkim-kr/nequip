@@ -41,5 +41,5 @@ __all__ = [
     "with_edge_type_",
     "model_modifier",
     "replace_submodules",
-    "AvgNumNeighborsNorm"
+    "AvgNumNeighborsNorm",
 ]

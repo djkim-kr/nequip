@@ -155,9 +155,9 @@ def FullNequIPGNNModel(
 ) -> GraphModel:
     """NequIP GNN model that predicts energies based on a more extensive set of arguments."""
     # === sanity checks and warnings ===
-    assert all(
-        tn.isalnum() for tn in type_names
-    ), "`type_names` must contain only alphanumeric characters"
+    assert all(tn.isalnum() for tn in type_names), (
+        "`type_names` must contain only alphanumeric characters"
+    )
 
     # require every convnet layer to be specified explicitly in a list
     # infer num_layers from the list size
