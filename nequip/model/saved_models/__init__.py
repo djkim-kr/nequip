@@ -2,8 +2,6 @@
 
 from .checkpoint import ModelFromCheckpoint
 from .package import ModelFromPackage
+from .load_utils import load_saved_model
 
-__all__ = [
-    "ModelFromCheckpoint",
-    "ModelFromPackage",
-]
+__all__ = ["ModelFromCheckpoint", "ModelFromPackage", "load_saved_model"]
