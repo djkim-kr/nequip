@@ -8,7 +8,7 @@ from nequip.model.saved_models.package import (
     _get_package_metadata,
     _suppress_package_importer_warnings,
 )
-from nequip.model.saved_models import ModelFromCheckpoint
+from nequip.model.saved_models import load_saved_model
 from nequip.model.utils import (
     _COMPILE_MODE_OPTIONS,
     _EAGER_MODEL_KEY,
@@ -17,7 +17,7 @@ from nequip.nn.model_modifier_utils import (
     is_persistent_model_modifier,
     is_private_model_modifier,
 )
-from nequip.model.modify_utils import get_all_modifiers, only_apply_persistent_modifiers
+from nequip.model.modify_utils import get_all_modifiers
 from nequip.utils.logger import RankedLogger
 from nequip.utils.versions import get_current_code_versions, _TORCH_GE_2_6
 from nequip.utils.versions.version_utils import get_version_safe
@@ -211,10 +211,11 @@ def main(args=None):
         # == get eager model ==
         # if the origin is `ModelFromPackage`, this call would have populated a variable that we can query later
         logger.info(f"Building `{_EAGER_MODEL_KEY}` model for packaging ...")
-        with only_apply_persistent_modifiers(persistent_only=True):
-            eager_model = ModelFromCheckpoint(
-                args.ckpt_path, compile_mode=_EAGER_MODEL_KEY
-            )
+        eager_model = load_saved_model(
+            args.ckpt_path,
+            compile_mode=_EAGER_MODEL_KEY,
+            model_key=None,
+        )
 
         # it's a `ModuleDict`, so we just reach into one of the models to get `type_names`
         # we expect all models to have the same `type_names` (see init of base Lightning module in `nequip/train/lightning.py`)
@@ -246,8 +247,9 @@ def main(args=None):
 
         for compile_mode in package_compile_modes:
             logger.info(f"Building `{compile_mode}` model for packaging ...")
-            with only_apply_persistent_modifiers(persistent_only=True):
-                model = ModelFromCheckpoint(args.ckpt_path, compile_mode=compile_mode)
+            model = load_saved_model(
+                args.ckpt_path, compile_mode=compile_mode, model_key=None
+            )
             models_to_package.update({compile_mode: model})
 
         # == package ==
