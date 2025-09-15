@@ -119,8 +119,10 @@ def load_saved_model(
             # packaged models will never have non-persistent modifiers built in
             model = ModelFromPackage(actual_input_path, compile_mode=compile_mode)
 
-        model = model[model_key]
-        # ^ `ModuleDict` of `GraphModel` is loaded, we then select the desired `GraphModel` (`model_key` defaults to work for single model case)
+        if model_key is not None:
+            model = model[model_key]
+            # ^ `ModuleDict` of `GraphModel` is loaded, we then select the desired `GraphModel` (`model_key` defaults to work for single model case)
+            # otherwise, return the `ModuleDict`
 
         # load data dict if requested
         if return_data_dict:
