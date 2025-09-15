@@ -2,7 +2,6 @@
 
 import torch
 
-from nequip.model.saved_models.checkpoint import data_dict_from_checkpoint
 from nequip.model.saved_models.package import (
     _get_shared_importer,
     _get_package_metadata,
@@ -188,11 +187,6 @@ def main(args=None):
         # == set global state ==
         set_global_state()
 
-        # == get example data from checkpoint ==
-        # the reason for including it here is that whoever receives the packaged model file does not need to have access to the original data source to do `nequip-compile` on the packaged model (AOT export requires example data)
-        logger.info("Instantiating datamodule for packaging.")
-        data = data_dict_from_checkpoint(args.ckpt_path)
-
         # === perform packaging ===
 
         # the main complication is that we need to account for the possibility that the checkpoint is based on another packaged model
@@ -211,10 +205,13 @@ def main(args=None):
         # == get eager model ==
         # if the origin is `ModelFromPackage`, this call would have populated a variable that we can query later
         logger.info(f"Building `{_EAGER_MODEL_KEY}` model for packaging ...")
-        eager_model = load_saved_model(
+        eager_model, data = load_saved_model(
             args.ckpt_path,
             compile_mode=_EAGER_MODEL_KEY,
             model_key=None,
+            return_data_dict=True,
+            # ^ get example data from checkpoint/package
+            # the reason for including it here is that whoever receives the packaged model file does not need to have access to the original data source to do `nequip-compile` on the packaged model (AOT export requires example data)
         )
 
         # it's a `ModuleDict`, so we just reach into one of the models to get `type_names`
