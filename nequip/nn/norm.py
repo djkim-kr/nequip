@@ -23,6 +23,7 @@ class AvgNumNeighborsNorm(torch.nn.Module):
         self.norm_shortcut = len(type_names) == 1 or isinstance(
             avg_num_neighbors, (float, int)
         )
+        self.in_field = self.out_field = AtomicDataDict.NODE_FEATURES_KEY
 
         # Put avg_num_neighbors in a list (global or per type)
         if isinstance(avg_num_neighbors, (float, int)):
@@ -37,22 +38,28 @@ class AvgNumNeighborsNorm(torch.nn.Module):
         assert isinstance(avg_num_neighbors, list)
 
         # Tensorize avg_num_neighbors and register as buffer
-        scatter_norm_factor = torch.tensor([(1.0 / sqrt(N)) for N in avg_num_neighbors])
-        scatter_norm_factor = scatter_norm_factor.reshape(-1, 1)
+        norm_const = torch.tensor([(1.0 / sqrt(N)) for N in avg_num_neighbors])
+        norm_const = norm_const.reshape(-1, 1)
         # Persistent=False to ensure backwards compatibility of FMs.
         # TODO remove this once we're sure FMs are not using this anymore
-        self.register_buffer(
-            "scatter_norm_factor", scatter_norm_factor, persistent=False
-        )
+        self.register_buffer("norm_const", norm_const, persistent=False)
 
-    def forward(self, data: AtomicDataDict.Type) -> torch.Tensor:
-        if self.norm_shortcut:
-            # No need to do embedding lookup in forward
-            scatter_norm = self.scatter_norm_factor  # shape: (1, 1)
+    def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+        features = data[self.in_field]
+        if AtomicDataDict.FEATURE_NORM_FACTOR_KEY in data:
+            norm_factor = data[AtomicDataDict.FEATURE_NORM_FACTOR_KEY]
         else:
-            # Embed each avg_num_neighbors value per type and reshape to (num_local_nodes, 1)
-            scatter_norm = torch.nn.functional.embedding(
-                data[AtomicDataDict.ATOM_TYPE_KEY],
-                self.scatter_norm_factor,
-            )  # shape: (num_local_nodes, 1)
-        return scatter_norm
+            # Compute norm factor for the first time
+            if self.norm_shortcut:
+                # No need to do embedding lookup in forward
+                norm_factor = self.norm_const  # shape: (1, 1)
+            else:
+                # Embed each avg_num_neighbors value per type and reshape to (num_local_nodes, 1)
+                norm_factor = torch.nn.functional.embedding(
+                    data[AtomicDataDict.ATOM_TYPE_KEY],
+                    self.norm_const,
+                )  # shape: (num_local_nodes, 1)
+            data[AtomicDataDict.FEATURE_NORM_FACTOR_KEY] = norm_factor
+
+        data[self.out_field] = norm_factor[: features.shape[0]] * features
+        return data
