@@ -57,6 +57,8 @@ EDGE_FORCE_KEY: Final[str] = "edge_forces"
 NODE_FEATURES_KEY: Final[str] = "node_features"
 NODE_ATTRS_KEY: Final[str] = "node_attrs"
 
+FEATURE_NORM_FACTOR_KEY: Final[str] = "feature_norm_factor"
+
 PER_ATOM_ENERGY_KEY: Final[str] = "atomic_energy"
 TOTAL_ENERGY_KEY: Final[str] = "total_energy"
 FORCE_KEY: Final[str] = "forces"
