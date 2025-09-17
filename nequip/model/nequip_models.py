@@ -130,6 +130,7 @@ def FullNequIPGNNModel(
     # irreps and dims
     irreps_edge_sh: Union[int, str, o3.Irreps],
     type_embed_num_features: int,
+    categorical_graph_field_embed: Optional[List[Dict[str, int]]] = None,
     # edge length encoding
     per_edge_type_cutoff: Optional[Dict[str, Union[float, Dict[str, float]]]] = None,
     num_bessels: int = 8,
@@ -214,6 +215,7 @@ def FullNequIPGNNModel(
     type_embed = NodeTypeEmbed(
         type_names=type_names,
         num_features=type_embed_num_features,
+        categorical_graph_field_embed=categorical_graph_field_embed,
         irreps_in=factor.irreps_out,
     )
     modules = {
