@@ -76,6 +76,9 @@ DIELECTRIC_KEY: Final[str] = "dielectric_tensor"
 BORN_CHARGE_KEY: Final[str] = "born_effective_charges"
 POLARIZATION_KEY: Final[str] = "polarization"
 
+TOTAL_CHARGE_KEY: Final[str] = "charge"
+TOTAL_SPIN_KEY: Final[str] = "spin"
+
 # metadata for a frame/graph
 FRAME_SUBSET_KEY: Final[str] = "subset"
 
