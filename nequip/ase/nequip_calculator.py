@@ -225,6 +225,12 @@ class NequIPCalculator(Calculator):
             stress_voigt = full_3x3_to_voigt_6_stress(stress)
             self.results["stress"] = stress_voigt
 
+        self.save_extra_outputs(out)
+
+    def save_extra_outputs(self, out: AtomicDataDict.Type):
+        # subclasses can implement this method to process extra outputs without code duplication
+        pass
+
 
 def _create_neighbor_transform(
     metadata: dict, r_max: float, type_names: List[str]
