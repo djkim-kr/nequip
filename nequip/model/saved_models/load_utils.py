@@ -85,16 +85,21 @@ def load_saved_model(
 ):
     """Load a saved model from checkpoint, package, or nequip.net.
 
+    This function can load models from:
+
+    - **Checkpoint files** (``.ckpt``): saved during training runs
+    - **Package files** (``.nequip.zip``): created with ``nequip-package``
+    - **nequip.net models**: using model ID format ``nequip.net:group-name/model-name:version`` from `nequip.net <https://www.nequip.net/>`__
+
     Args:
         input_path: path to the model checkpoint or package file, or nequip.net model ID
-                   (format: nequip.net:group-name/model-name:version)
-        compile_mode (str): compile mode for the model (default: _EAGER_MODEL_KEY)
-        model_key (str): key to select the model from ModuleDict (default: _SOLE_MODEL_KEY)
-        return_data_dict (bool): if True, also return the data dict for compilation (default: False)
+                   (format: ``nequip.net:group-name/model-name:version``)
+        compile_mode (str): compile mode for the model (default: ``"eager"``)
+        model_key (str): key to select the model from ModuleDict (default: ``"sole_model"``)
+        return_data_dict (bool): if ``True``, also return the data dict for compilation (default: ``False``)
 
     Returns:
-        model: The loaded model
-        data (optional): Data dict if return_data_dict=True, returned as tuple (model, data)
+        torch.nn.Module or tuple: the loaded model, or ``(model, data)`` tuple if ``return_data_dict=True``
     """
 
     with _get_model_file_path(input_path) as actual_input_path:
