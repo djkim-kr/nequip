@@ -177,13 +177,10 @@ class NequIPLAMMPSMLIAPWrapper(MLIAPUnified):
         # - nodewise operations that involve `atom_types` (since `atom_types` is `num_local + num_ghost`), e.g. in `PerTypeScaleShift` and `ZBL`.
 
         # TODO: we have yet to exploit per-edge-type cutoffs by pruning the edge vectors and neighborlist
-        # make sure edge vectors `requires_grad`
-        edge_vectors = torch.as_tensor(lmp_data.rij, dtype=torch.float64).to(
-            self.device
-        )
-        edge_vectors.requires_grad_(True)
         nequip_data_in = {
-            AtomicDataDict.EDGE_VECTORS_KEY: edge_vectors,
+            AtomicDataDict.EDGE_VECTORS_KEY: torch.as_tensor(
+                lmp_data.rij, dtype=torch.float64
+            ).to(self.device),
             AtomicDataDict.EDGE_INDEX_KEY: torch.vstack(
                 [
                     torch.as_tensor(lmp_data.pair_i, dtype=torch.int64).to(self.device),
@@ -200,8 +197,10 @@ class NequIPLAMMPSMLIAPWrapper(MLIAPUnified):
         }
 
         # === run model ===
+        # make sure edge vectors `requires_grad`
+        edge_vectors = nequip_data_in[AtomicDataDict.EDGE_VECTORS_KEY]
+        edge_vectors.requires_grad_(True)
         # run model and backwards for edge forces
-        nequip_data_in[AtomicDataDict.EDGE_VECTORS_KEY].requires_grad_(True)
         nequip_data_out = self.model(nequip_data_in)
         # correct sign convention for consistency with LAMMPS
         edge_forces = torch.autograd.grad(
