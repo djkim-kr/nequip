@@ -2,6 +2,8 @@
 
 Fine-tuning allows you to adapt a pretrained model to new datasets. This is useful when you have a model trained on one system and want to adapt it to a similar but different system.
 
+Pretrained models for fine-tuning can be found at [nequip.net](https://www.nequip.net/).
+
 
 ## Modifying Per-Type Energy Shifts and Scales
 
