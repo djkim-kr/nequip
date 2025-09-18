@@ -15,6 +15,7 @@ Getting Started
    extension_packages/data
    extension_packages/training
    extension_packages/models
+   extension_packages/inference
 
 Example Extension Packages
 ---------------------------
