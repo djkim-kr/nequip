@@ -95,7 +95,7 @@ def register_compile_targets(
     The intended clients of this function are NequIP extension packages to register their custom compilation targets.
 
     Args:
-        target_dict: dict containing keys `input`, `output`, `batch_map_settings`, `data_settings`
+        target_dict: dict containing keys ``input``, ``output``, ``batch_map_settings``, ``data_settings``
     """
     # update target dict
     global COMPILE_TARGET_DICT
