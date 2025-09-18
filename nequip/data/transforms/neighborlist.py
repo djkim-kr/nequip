@@ -1,6 +1,7 @@
 # This file is a part of the `nequip` package. Please see LICENSE and README at the root for information on using it.
 import torch
 from nequip.data import AtomicDataDict, compute_neighborlist_
+from nequip.data._key_registry import get_field_type
 from typing import Optional, Dict, Union, List
 
 
@@ -69,14 +70,17 @@ class NeighborListTransform:
             <= 1.0
         )
 
-        # mask neighborlist
+        # mask edge index (handled separately since it has shape [2, num_edges])
         data[AtomicDataDict.EDGE_INDEX_KEY] = data[AtomicDataDict.EDGE_INDEX_KEY][
             :, mask
         ]
-        if AtomicDataDict.EDGE_CELL_SHIFT_KEY in data:
-            data[AtomicDataDict.EDGE_CELL_SHIFT_KEY] = data[
-                AtomicDataDict.EDGE_CELL_SHIFT_KEY
-            ][mask]
+
+        # mask all other edge fields
+        for field in list(data.keys()):
+            if field == AtomicDataDict.EDGE_INDEX_KEY:
+                continue  # already handled above
+            if get_field_type(field, error_on_unregistered=False) == "edge":
+                data[field] = data[field][mask]
 
         return data
 
