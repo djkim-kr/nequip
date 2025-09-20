@@ -10,12 +10,37 @@ model:
 ```
 To see the documentation for individual hyperparameters, look at the Python API documentation for the model builder function ({func}`~nequip.model.NequIPGNNModel` in this example).  Model builders are usually in the `.model` subpackage of `nequip` or a `nequip` extension package.
 
-For energy-only datasets (without forces), use {func}`~nequip.model.NequIPGNNEnergyModel` instead:
+## Energy-only models
+
+For energy-only datasets (without forces), set `do_derivatives=false`:
 
 ```yaml
 model:
-    _target_: nequip.model.NequIPGNNEnergyModel
+    _target_: nequip.model.NequIPGNNModel
+    do_derivatives: false
     # ... other hyperparameters
+```
+
+You can later enable derivatives for inference by using [`nequip-compile`](../getting-started/workflow.md#compilation) with the `enable_ForceStressOutput` modifier:
+
+```bash
+nequip-compile model.ckpt compiled.nequip.pt2 \
+    --compile-mode aotinductor \
+    --modifiers enable_ForceStressOutput
+```
+
+Then use the compiled model with ASE to compute forces.
+
+Or enable derivatives for fine-tuning using the same model modifier:
+
+```yaml
+model:
+  _target_: nequip.model.modify
+  modifiers:
+    - modifier: enable_ForceStressOutput
+  model:
+    _target_: nequip.model.ModelFromPackage
+    package_path: /path/to/energy_only_model.nequip.zip
 ```
 
 ## Training data statistics as hyperparameters

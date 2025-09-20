@@ -45,7 +45,7 @@
 
   **A**: For energy-only datasets, use the following specialized components:
 
-  - **Model**: {class}`~nequip.model.NequIPGNNEnergyModel` instead of {class}`~nequip.model.NequIPGNNModel`
+  - **Model**: {class}`~nequip.model.NequIPGNNModel` with `do_derivatives=false`
   - **Data Statistics**: {class}`~nequip.data.EnergyOnlyDataStatisticsManager` instead of {class}`~nequip.data.CommonDataStatisticsManager`
   - **Loss Function**: {class}`~nequip.train.EnergyOnlyLoss` instead of {class}`~nequip.train.EnergyForceLoss`
   - **Validation Metrics**: {class}`~nequip.train.EnergyOnlyMetrics` instead of {class}`~nequip.train.EnergyForceMetrics`
