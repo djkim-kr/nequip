@@ -28,9 +28,17 @@ import warnings
 from typing import Sequence, Optional, List, Dict, Union, Callable
 
 
-def _nequip_gnn_docstring(header: str) -> str:
-    """Generate common docstring for NequIP GNN models with customizable header."""
-    return f"""{header}
+@model_builder
+def NequIPGNNModel(
+    num_layers: int = 4,
+    l_max: int = 1,
+    parity: bool = True,
+    num_features: Union[int, List[int]] = 32,
+    radial_mlp_depth: int = 2,
+    radial_mlp_width: int = 64,
+    **kwargs,
+) -> GraphModel:
+    """NequIP GNN model that can predict energies only or energies with forces/stresses.
 
     Args:
         seed (int): seed for reproducibility
@@ -53,19 +61,8 @@ def _nequip_gnn_docstring(header: str) -> str:
         per_type_energy_scales_trainable (bool): whether the per-atom energy scales are trainable (default ``False``)
         per_type_energy_shifts_trainable (bool): whether the per-atom energy shifts are trainable (default ``False``)
         pair_potential (torch.nn.Module): additional pair potential term, e.g. :class:`~nequip.nn.pair_potential.ZBL` (default ``None``)
+        do_derivatives (bool): whether to compute forces and stresses via autograd (default ``True``)
     """
-
-
-@model_builder
-def NequIPGNNEnergyModel(
-    num_layers: int = 4,
-    l_max: int = 1,
-    parity: bool = True,
-    num_features: Union[int, List[int]] = 32,
-    radial_mlp_depth: int = 2,
-    radial_mlp_width: int = 64,
-    **kwargs,
-) -> GraphModel:
     # === sanity checks and warnings ===
     assert num_layers > 0, (
         f"at least one convnet layer required, but found `num_layers={num_layers}`"
@@ -102,7 +99,7 @@ def NequIPGNNEnergyModel(
     feature_irreps_hidden_list += [repr(o3.Irreps([(num_features[0], (0, 1))]))]
 
     # === build model ===
-    model = FullNequIPGNNEnergyModel(
+    model = FullNequIPGNNModel(
         irreps_edge_sh=irreps_edge_sh,
         type_embed_num_features=num_features[0],
         feature_irreps_hidden=feature_irreps_hidden_list,
@@ -113,25 +110,8 @@ def NequIPGNNEnergyModel(
     return model
 
 
-# assign docstrings using the shared function
-NequIPGNNEnergyModel.__doc__ = _nequip_gnn_docstring(
-    "NequIP GNN model that predicts energies only."
-)
-
-
 @model_builder
-def NequIPGNNModel(**kwargs) -> GraphModel:
-    return ForceStressOutput(func=NequIPGNNEnergyModel(**kwargs))
-
-
-# assign docstring for the force+energy model
-NequIPGNNModel.__doc__ = _nequip_gnn_docstring(
-    "NequIP GNN model that predicts energies and forces (and stresses if cell is provided)."
-)
-
-
-@model_builder
-def FullNequIPGNNEnergyModel(
+def FullNequIPGNNModel(
     r_max: float,
     type_names: Sequence[str],
     # convnet params
@@ -154,6 +134,8 @@ def FullNequIPGNNEnergyModel(
     per_type_energy_scales_trainable: Optional[bool] = False,
     per_type_energy_shifts_trainable: Optional[bool] = False,
     pair_potential: Optional[Dict] = None,
+    # derivatives
+    do_derivatives: bool = True,
     # == things that generally shouldn't be changed ==
     # convnet
     convnet_resnet: bool = False,
@@ -302,11 +284,6 @@ def FullNequIPGNNEnergyModel(
     )
     modules.update({"total_energy_sum": total_energy_sum})
 
-    # === assemble in SequentialGraphNetwork ===
-    return SequentialGraphNetwork(modules)
-
-
-@model_builder
-def FullNequIPGNNModel(**kwargs) -> GraphModel:
-    """NequIP GNN model that predicts energies and forces (and stresses if cell is provided), based on a more extensive set of arguments."""
-    return ForceStressOutput(func=FullNequIPGNNEnergyModel(**kwargs))
+    # === finalize ===
+    energy_model = SequentialGraphNetwork(modules)
+    return ForceStressOutput(energy_model, do_derivatives)

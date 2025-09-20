@@ -10,9 +10,12 @@ Most recent change on the top.
 
 
 ### Added
-- Users can specify having irreps of different multiplicites in `NequIPGNNEnergyModel` by providing `num_features` that is a list of `l_max + 1` features. E.g. for `l_max=2` and `parity=False`, `num_features=[5, 2, 7]` refers to `5x0e`, `2x1o` and `7x2e` features (see `configs/tutorial.yaml` for an example)
+- Users can specify having irreps of different multiplicites in `NequIPGNNModel` by providing `num_features` that is a list of `l_max + 1` features. E.g. for `l_max=2` and `parity=False`, `num_features=[5, 2, 7]` refers to `5x0e`, `2x1o` and `7x2e` features (see `configs/tutorial.yaml` for an example)
 - batched AOTI inference
 - per-edge-type cutoff can now lead to cost reduction in the LAMMPS ML-IAP interface
+
+### Removed
+- `NequIPGNNEnergyModel` has been removed. Energy-only models can be constructed by using `NequIPGNNModel` with a new argument `do_derivatives=False`
 
 ## [0.15.0]
 
