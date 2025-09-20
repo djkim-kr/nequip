@@ -15,7 +15,11 @@ Most recent change on the top.
 - per-edge-type cutoff can now lead to cost reduction in the LAMMPS ML-IAP interface
 
 ### Removed
-- `NequIPGNNEnergyModel` has been removed. Energy-only models can be constructed by using `NequIPGNNModel` with a new argument `do_derivatives=False`
+- [Breaking] `NequIPGNNEnergyModel` has been removed. Energy-only models can be constructed by using `NequIPGNNModel` with a new argument `do_derivatives=False`
+
+### Changed
+- Simplified metrics manager wrappers now include maximum absolute error metrics
+
 
 ## [0.15.0]
 
