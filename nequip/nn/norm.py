@@ -14,7 +14,8 @@ class AvgNumNeighborsNorm(torch.nn.Module):
         Module to normalize features during training using per type edge sum normalization.
 
         Args:
-
+            type_names (Sequence[str]): list of atom type names
+            avg_num_neighbors (float/Dict[str, float]): used to normalize edge sums for better numerics
         """
         super().__init__()
         assert avg_num_neighbors is not None, "avg_num_neighbors must be specified"
@@ -46,20 +47,22 @@ class AvgNumNeighborsNorm(torch.nn.Module):
 
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         features = data[self.in_field]
-        if AtomicDataDict.FEATURE_NORM_FACTOR_KEY in data:
-            norm_factor = data[AtomicDataDict.FEATURE_NORM_FACTOR_KEY]
+        norm_size = features.size(0)
+        norm_key = AtomicDataDict.FEATURE_NORM_FACTOR_KEY
+        if norm_key in data and data[norm_key].size(0) == norm_size:
+            norm_factor = data[norm_key]
         else:
             # Compute norm factor for the first time
             if self.norm_shortcut:
                 # No need to do embedding lookup in forward
-                norm_factor = self.norm_const  # shape: (1, 1)
+                norm_factor = self.norm_const.expand(norm_size, -1)
             else:
-                # Embed each avg_num_neighbors value per type and reshape to (num_local_nodes, 1)
+                # Embed each avg_num_neighbors value per type
                 norm_factor = torch.nn.functional.embedding(
-                    data[AtomicDataDict.ATOM_TYPE_KEY],
+                    data[norm_key][:norm_size],
                     self.norm_const,
-                )  # shape: (num_local_nodes, 1)
-            data[AtomicDataDict.FEATURE_NORM_FACTOR_KEY] = norm_factor
+                )
+            data[norm_key] = norm_factor  # shape: (num_local_nodes, 1)
 
-        data[self.out_field] = norm_factor[: features.shape[0]] * features
+        data[self.out_field] = norm_factor * features
         return data

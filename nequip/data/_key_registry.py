@@ -35,7 +35,6 @@ _DEFAULT_GRAPH_FIELDS: Set[str] = {
     _keys.POLARIZATION_KEY,
     _keys.DIELECTRIC_KEY,
     _keys.FRAME_SUBSET_KEY,
-    _keys.FEATURE_NORM_FACTOR_KEY,
 }
 _DEFAULT_NODE_FIELDS: Set[str] = {
     _keys.POSITIONS_KEY,
@@ -51,6 +50,7 @@ _DEFAULT_NODE_FIELDS: Set[str] = {
     _keys.DIPOLE_KEY,
     _keys.BORN_CHARGE_KEY,
     _keys.BATCH_KEY,
+    _keys.FEATURE_NORM_FACTOR_KEY,
 }
 _DEFAULT_EDGE_FIELDS: Set[str] = {
     _keys.EDGE_CELL_SHIFT_KEY,
