@@ -59,7 +59,7 @@ class AvgNumNeighborsNorm(torch.nn.Module):
             else:
                 # Embed each avg_num_neighbors value per type
                 norm_factor = torch.nn.functional.embedding(
-                    data[norm_key][:norm_size],
+                    data[AtomicDataDict.ATOM_TYPE_KEY][:norm_size],
                     self.norm_const,
                 )
             data[norm_key] = norm_factor  # shape: (num_local_nodes, 1)
