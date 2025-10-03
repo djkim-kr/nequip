@@ -76,7 +76,9 @@ def with_edge_vectors_(
     """Compute the edge displacement vectors for a graph."""
     if edge_vec_field in data:
         if with_lengths and edge_len_field not in data:
-            data[edge_len_field] = torch.linalg.norm(data[edge_vec_field], dim=-1)
+            data[edge_len_field] = (
+                data[edge_vec_field].square().sum(1, keepdim=True).sqrt()
+            )
         return data
     else:
         # Build it dynamically
