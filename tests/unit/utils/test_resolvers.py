@@ -15,7 +15,7 @@ CUTOFFS: Final[List[float]] = [
 ]
 
 REQUIRED_KEYS: Final[List[str]] = [
-    "chemical_symbols",
+    "chemical_species",
     "per_atom_energy_mean",
     "forces_rms",
     "isolated_atom_energies",
@@ -45,8 +45,8 @@ def test_big_dataset_stats_resolver(cutoff, dataset):
     for k in REQUIRED_KEYS:
         assert k in dataset_stats, f"missing key: {k}"
 
-    # chemical_symbols: List[str]
-    chem = dataset_stats.chemical_symbols
+    # chemical_species: List[str]
+    chem = dataset_stats.chemical_species
 
     assert OmegaConf.is_list(chem)
     assert all(isinstance(s, str) for s in chem)
@@ -63,16 +63,16 @@ def test_big_dataset_stats_resolver(cutoff, dataset):
     assert all(isinstance(v, float) for v in shifts.values())
 
     assert set(shifts.keys()) == set(chem), (
-        "All chemical_symbols must be represented in isolated_atom_energies"
+        "All chemical_species must be represented in isolated_atom_energies"
     )
 
     # per_type_forces_rms: DictConfig[str, float]
     scales = dataset_stats.per_type_forces_rms
     assert OmegaConf.is_dict(scales)
     assert all(isinstance(v, float) for v in scales.values())
-    # This checks both that all keys are string and that all chemical symbols are represented
+    # This checks both that all keys are string and that all chemical species are represented
     assert set(scales.keys()) == set(chem), (
-        "All chemical_symbols must be represented in per_type_forces_rms"
+        "All chemical_species must be represented in per_type_forces_rms"
     )
 
     # per_type_num_neighbors_mean: DictConfig[str, float]
@@ -80,10 +80,10 @@ def test_big_dataset_stats_resolver(cutoff, dataset):
     assert OmegaConf.is_dict(pt_nn)
     assert all(isinstance(v, float) for v in pt_nn.values())
     assert set(pt_nn.keys()) == set(chem), (
-        "All chemical_symbols must be represented in per_type_num_neighbors_mean"
+        "All chemical_species must be represented in per_type_num_neighbors_mean"
     )
 
-    # All per-type dicts must have the same length as chemical_symbols
+    # All per-type dicts must have the same length as chemical_species
     expected_len = len(chem)
     assert len(shifts) == expected_len
     assert len(scales) == expected_len
