@@ -6,7 +6,8 @@ run: [train, test]
 # interpolation variables (not fundamental)
 data_seed: 123
 cutoff_radius: 5.0
-chemical_symbols: [Cu]
+model_type_names: [Cu]
+chemical_species: ${model_type_names}
 
 # the same datamodule that you'd normally use (with less stuff)
 data:
@@ -18,7 +19,8 @@ data:
       # transforms are optional, depending on whether you want the transformations to be pre-applied
       # transforms:
       #   - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
-      #     chemical_symbols: ${chemical_symbols}
+      #     model_type_names: ${model_type_names}
+      #     chemical_species_to_atom_type_map: ${list_to_identity_dict:${chemical_species}}
       #   - _target_: nequip.data.transforms.NeighborListTransform
       #     r_max: ${cutoff_radius}
       supercell: [4, 4, 4]
