@@ -364,18 +364,19 @@ class BaseModelTests:
 
         # == get ase calculator for checkpoint and compiled models ==
         # we only ever load it into the same device that we `nequip-compile`d for
-        chemical_symbols = config.chemical_symbols
+        chemical_species = config.chemical_species
+        chemical_species_to_atom_type_map = {s: s for s in chemical_species}
 
         # load reference calculator based on model source
         ref_calc = NequIPCalculator._from_saved_model(
             model_path,
             device=device,
-            chemical_symbols=chemical_symbols,
+            chemical_species_to_atom_type_map=chemical_species_to_atom_type_map,
         )
         compile_calc = NequIPCalculator.from_compiled_model(
             output_path,
             device=device,
-            chemical_symbols=chemical_symbols,
+            chemical_species_to_atom_type_map=chemical_species_to_atom_type_map,
         )
 
         # == get validation data by instantiating datamodules ==
@@ -699,7 +700,8 @@ class BaseEnergyModelTests(BaseModelTests):
         atoms_both = atoms1.copy()
         atoms_both.extend(atoms2)
         tm = ChemicalSpeciesToAtomTypeMapper(
-            chemical_symbols=["H", "C", "O"],
+            model_type_names=["H", "C", "O"],
+            chemical_species_to_atom_type_map={"H": "H", "C": "C", "O": "O"},
         )
 
         data1 = AtomicDataDict.to_(
@@ -1161,9 +1163,10 @@ class BaseEnergyModelTests(BaseModelTests):
         _check_and_print(retcode)
 
         # load calculator for comparison
+        chemical_species_to_atom_type_map = {s: s for s in config.chemical_species}
         calc = NequIPCalculator._from_saved_model(
             model_path,
-            chemical_symbols=config.chemical_symbols,
+            chemical_species_to_atom_type_map=chemical_species_to_atom_type_map,
         )
 
         return tmpdir, calc, config, mliap_path
