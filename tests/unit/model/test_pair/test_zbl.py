@@ -51,7 +51,10 @@ class TestZBLModel(BaseEnergyModelTests):
         if config["model_dtype"] == "float64":
             transforms = [
                 ChemicalSpeciesToAtomTypeMapper(
-                    chemical_symbols=config["chemical_species"],
+                    model_type_names=config["type_names"],
+                    chemical_species_to_atom_type_map={
+                        s: s for s in config["chemical_species"]
+                    },
                 ),
                 NeighborListTransform(r_max=_ZBL_TEST_RMAX),
             ]
