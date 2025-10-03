@@ -113,7 +113,10 @@ def TolueneDataModule(num_trainval_test, batch_size):
           data_source_dir: {}
           transforms:
             - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
-              chemical_symbols: [C, H]
+              model_type_names: [C, H]
+              chemical_species_to_atom_type_map:
+                C: C
+                H: H
             - _target_: nequip.data.transforms.NeighborListTransform
               r_max: 4.0
           train_val_split: [0.8, 0.2]

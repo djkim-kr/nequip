@@ -1,20 +1,8 @@
 import pytest
 
-import torch
 from torch.utils.data import SubsetRandomSampler, DataLoader, Subset
 
 from nequip.data import AtomicDataDict
-from nequip.data.transforms import ChemicalSpeciesToAtomTypeMapper
-
-
-def test_type_mapper():
-    tm = ChemicalSpeciesToAtomTypeMapper(
-        chemical_symbols=["C", "H"],
-    )
-    data = {AtomicDataDict.ATOMIC_NUMBERS_KEY: torch.as_tensor([1, 1, 6, 1, 6, 6, 6])}
-    data = tm(data)
-    atom_types = data[AtomicDataDict.ATOM_TYPE_KEY]
-    assert torch.all(atom_types == torch.as_tensor([1, 1, 0, 1, 0, 0, 0]))
 
 
 class TestDataset:

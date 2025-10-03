@@ -10,7 +10,19 @@ from nequip.data.transforms import (
     StressSignFlipTransform,
     NeighborListTransform,
     SortedNeighborListTransform,
+    ChemicalSpeciesToAtomTypeMapper,
 )
+
+
+def test_ChemicalSpeciesToAtomTypeMapper():
+    tm = ChemicalSpeciesToAtomTypeMapper(
+        model_type_names=["C", "H"],
+        chemical_species_to_atom_type_map={"C": "C", "H": "H"},
+    )
+    data = {AtomicDataDict.ATOMIC_NUMBERS_KEY: torch.as_tensor([1, 1, 6, 1, 6, 6, 6])}
+    data = tm(data)
+    atom_types = data[AtomicDataDict.ATOM_TYPE_KEY]
+    assert torch.all(atom_types == torch.as_tensor([1, 1, 0, 1, 0, 0, 0]))
 
 
 def test_VirialToStressTransform():
