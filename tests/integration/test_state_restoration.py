@@ -55,16 +55,17 @@ def test_state_restoration(fake_model_training_session, device):
     ]
 
     # == get ase calculator for checkpoint and packaged models ==
-    chemical_symbols = config.chemical_symbols
+    chemical_species = config.chemical_species
+    chemical_species_to_atom_type_map = {s: s for s in chemical_species}
     ckpt_calc = NequIPCalculator._from_saved_model(
         ckpt_path,
         device=device,
-        chemical_symbols=chemical_symbols,
+        chemical_species_to_atom_type_map=chemical_species_to_atom_type_map,
     )
     package_calc = NequIPCalculator._from_saved_model(
         package_path,
         device=device,
-        chemical_symbols=chemical_symbols,
+        chemical_species_to_atom_type_map=chemical_species_to_atom_type_map,
     )
 
     # == get validation data by instantiating datamodules ==
