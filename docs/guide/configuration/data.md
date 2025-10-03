@@ -70,26 +70,48 @@ Key arguments that datamodules take include transforms (see [Data Transforms](#d
 Transforms process raw data into a format suitable for model training. They are specified in datamodule configurations (see [DataModules](#datamodules) and [`nequip.data.datamodule`](../../api/datamodule.rst)) which pass them as arguments to datasets (see [`nequip.data.dataset`](../../api/dataset.rst)) where they are applied sequentially to each data point.
 Two transforms are essential for most use cases:
 
-- **{class}`~nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper`** (usually required) maps atomic numbers to model type indices. This handles the distinction between chemical elements (C, H, O) and the integer type indices (0, 1, 2) that the model uses:
+- **{class}`~nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper`** maps atomic numbers to model type indices. This handles the distinction between chemical species (C, H, O) and the model atom type names:
   ```yaml
   - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
-    chemical_symbols: [C, H, O, Cu]  # Order determines type indices
+    model_type_names: [C, H, O, Cu]
+    chemical_species_to_atom_type_map:
+      C: C
+      H: H
+      O: O
+      Cu: Cu
   ```
 
-- **{class}`~nequip.data.transforms.NeighborListTransform`** (always required) computes which atoms are neighbors of each atom within a cutoff distance. This is fundamental for graph-based neural networks:
+  When `model_type_names` correspond exactly to chemical species (the common case), you can omit `chemical_species_to_atom_type_map` and it will default to an identity mapping:
+  ```yaml
+  - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
+    model_type_names: [C, H, O, Cu]
+  ```
+
+  Alternatively, you can use the `list_to_identity_dict` resolver to be explicit:
+  ```yaml
+  model_type_names: [C, H, O, Cu]
+  chemical_species: ${model_type_names}
+
+  transforms:
+    - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
+      model_type_names: ${model_type_names}
+      chemical_species_to_atom_type_map: ${list_to_identity_dict:${chemical_species}}
+  ```
+
+- **{class}`~nequip.data.transforms.NeighborListTransform`** computes which atoms are neighbors of each atom within a cutoff distance.
   ```yaml
   - _target_: nequip.data.transforms.NeighborListTransform
     r_max: 5.0  # should be the same as model `r_max`
   ```
 
-The `chemical_symbols` list defines the mapping from atomic numbers to type indices, and `type_names` should be consistent across data, model, and statistics configurations.
+The `model_type_names` list defines the atom types known to the model, and the `chemical_species_to_atom_type_map` dict explicitly maps chemical species to these types. The `model_type_names` should be consistent across data, model, and statistics configurations.
 
 Here's an example with both transforms:
 
 ```yaml
 transforms:
   - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
-    chemical_symbols: [C, H, O, Cu]
+    model_type_names: ${model_type_names}
   - _target_: nequip.data.transforms.NeighborListTransform
     r_max: 5.0
 ```

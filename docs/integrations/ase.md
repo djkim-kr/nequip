@@ -35,17 +35,37 @@ calculator = NequIPCalculator.from_compiled_model(
 ```
 
 ### Mapping types from NequIP to ASE
-As can be seen in the [ASE calculator API](../api/ase.rst), the  `chemical_symbols` argument is optional. ASE models the types of atoms with their atomic numbers, or correspondingly, chemical symbols. The NequIP framework, on the other hand, can handle an arbitrary number of atom types with arbitrary alphanumeric names. If `chemical_symbols` is not specified, by default, `nequip` assumes that the `nequip` model's types (see [nequip.model](../api/model.rst)) are named after chemical symbols, and maps the atoms from ASE accordingly.
+ASE represents atom types using atomic numbers and chemical symbols (H, C, O, etc.).
+The NequIP framework can handle arbitrary alphanumeric atom type names.
+The `chemical_species_to_atom_type_map` argument controls how chemical species from ASE structures map to the model's atom types.
 
-If this is not the case, or if you want to silence the warning from not providing `chemical_symbols`, then explicitly provide `chemical_symbols`, either as list of `nequip` type names or the type mapping from chemical species in ASE to the `nequip` type names:
+**Default behavior (with warning):** If not specified, the calculator assumes model type names are chemical symbols and uses an identity mapping. A warning is issued to alert you of this assumption:
 
 ```python
-from nequip.ase import NequIPCalculator
-
 calculator = NequIPCalculator.from_compiled_model(
     compile_path="path/to/compiled_model.nequip.pt2",
-    device="cuda",  # or "cpu"
-    chemical_symbols={"H": "myHydrogen", "C": "someCarbonType"}
+    device="cuda",
+    # Omitting chemical_species_to_atom_type_map triggers a warning
+)
+```
+
+**Explicit identity mapping (no warning):** When you know the model type names correspond exactly to chemical species, set `chemical_species_to_atom_type_map=True` to silence the warning:
+
+```python
+calculator = NequIPCalculator.from_compiled_model(
+    compile_path="path/to/compiled_model.nequip.pt2",
+    device="cuda",
+    chemical_species_to_atom_type_map=True  # identity mapping, no warning
+)
+```
+
+**Custom mapping:** If the model uses non-standard type names (e.g., charge states, coarse-grained types), provide an explicit mapping dict:
+
+```python
+calculator = NequIPCalculator.from_compiled_model(
+    compile_path="path/to/compiled_model.nequip.pt2",
+    device="cuda",
+    chemical_species_to_atom_type_map={"H": "H+", "C": "C_sp3", "O": "O-"}
 )
 ```
 
@@ -67,9 +87,9 @@ import torch
 
 # Initialize the nequip calculator
 calculator = NequIPCalculator.from_compiled_model(
-    compile_path="path/to/compiled_model.nequip.pt2", 
-    chemical_symbols=["Si"], 
-    device="cuda" if torch.cuda.is_available() else "cpu",  
+    compile_path="path/to/compiled_model.nequip.pt2",
+    chemical_species_to_atom_type_map={"Si": "Si"},
+    device="cuda" if torch.cuda.is_available() else "cpu",
 )  # use GPUs if available
 
 # Range of scaling factors for lattice constant
