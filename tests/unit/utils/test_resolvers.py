@@ -170,3 +170,16 @@ def test_concat_lists_resolver_errors():
         ValueError, match="Second argument must be a list, tuple, or ListConfig"
     ):
         _ = cfg2.concatenated
+
+
+def test_list_to_identity_dict_resolver():
+    """Tests `nequip.utils.resolvers.list_to_identity_dict` resolver."""
+    cfg = OmegaConf.create(
+        {
+            "species": ["H", "C", "O"],
+            "identity_map": "${list_to_identity_dict:${species}}",
+        }
+    )
+
+    result = cfg.identity_map
+    assert result == {"H": "H", "C": "C", "O": "O"}

@@ -57,6 +57,15 @@ def concat_lists(list1, list2):
     return list1 + list2
 
 
+def list_to_identity_dict(x):
+    """Convert a list to an identity dictionary mapping each element to itself."""
+    if not isinstance(x, (list, tuple, ListConfig)):
+        raise ValueError(
+            f"Argument must be a list, tuple, or ListConfig, got {type(x)}"
+        )
+    return {item: item for item in x}
+
+
 def big_dataset_stats(name: str, cutoff_radius: float) -> Dict[str, Any]:
     """Get precomputed dataset statistics for large datasets."""
     root = get_project_root()
@@ -89,6 +98,7 @@ _DEFAULT_RESOLVERS: Dict[str, Callable] = {
     "int_div": int_div,
     "int_mul": int_mul,
     "concat_lists": concat_lists,
+    "list_to_identity_dict": list_to_identity_dict,
     "big_dataset_stats": big_dataset_stats,
 }
 
