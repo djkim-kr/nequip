@@ -258,7 +258,7 @@ class BaseModelTests:
             "pair_potential" in model_config
             and "chemical_species" in model_config["pair_potential"]
         ):
-            updates["pair_potential.chemical_species"] = "${chemical_symbols}"
+            updates["pair_potential.chemical_species"] = "${chemical_species}"
 
         # handle per_edge_type_cutoff - use the one from integration config if present
         # this will ensure consistent type names and cutoff values
@@ -1196,7 +1196,7 @@ class BaseEnergyModelTests(BaseModelTests):
             s.wrap()
         structures = structures[:1]  # test with first structure only
 
-        num_types = len(config["chemical_symbols"])
+        num_types = len(config["chemical_species"])
         periodic = all(structures[0].pbc)
         PRECISION_CONST = 1e6
 
@@ -1218,7 +1218,7 @@ class BaseEnergyModelTests(BaseModelTests):
 
             # potential
             pair_style mliap unified {mliap_path} 0
-            pair_coeff * * {" ".join(sorted(set(config["chemical_symbols"])))}
+            pair_coeff * * {" ".join(sorted(set(config["chemical_species"])))}
             {newline.join([f"mass {i + 1} 1.0" for i in range(num_types)])}
 
             neighbor	1.0 bin
