@@ -145,3 +145,25 @@ def data_dict_from_package(package_path: str) -> AtomicDataDict.Type:
         imp = torch.package.PackageImporter(package_path)
         data = imp.load_pickle(package="model", resource="example_data.pkl")
     return data
+
+
+def ModelTypeNamesFromPackage(package_path: str):
+    """Extract model type names from a packaged model file.
+
+    Useful for setting up type mappers when fine-tuning models or when you need to know what atom types a model was trained on.
+
+    Args:
+        package_path (str): path to packaged model file
+    """
+    from typing import List
+
+    _check_file_exists(file_path=package_path, file_type="package")
+
+    with _suppress_package_importer_warnings():
+        imp = torch.package.PackageImporter(package_path)
+        pkg_metadata = _get_package_metadata(imp)
+
+    atom_types_dict = pkg_metadata["atom_types"]
+    # convert dict {idx: name} to list [name, ...]
+    type_names: List[str] = [atom_types_dict[i] for i in range(len(atom_types_dict))]
+    return type_names

@@ -92,6 +92,13 @@ def big_dataset_stats(name: str, cutoff_radius: float) -> Dict[str, Any]:
     return stats
 
 
+def type_names_from_package(package_path: str):
+    """Extract type names from a packaged model file."""
+    from nequip.model import ModelTypeNamesFromPackage
+
+    return ModelTypeNamesFromPackage(package_path)
+
+
 # === Resolver Registry ===
 
 _DEFAULT_RESOLVERS: Dict[str, Callable] = {
@@ -100,6 +107,7 @@ _DEFAULT_RESOLVERS: Dict[str, Callable] = {
     "concat_lists": concat_lists,
     "list_to_identity_dict": list_to_identity_dict,
     "big_dataset_stats": big_dataset_stats,
+    "type_names_from_package": type_names_from_package,
 }
 
 _REGISTERED_RESOLVERS: Set[str] = set()
