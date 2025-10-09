@@ -34,6 +34,7 @@ def NequIPGNNModel(
     l_max: int = 1,
     parity: bool = True,
     num_features: Union[int, List[int]] = 32,
+    type_embed_num_features: Optional[int] = None,
     radial_mlp_depth: int = 2,
     radial_mlp_width: int = 64,
     **kwargs,
@@ -50,6 +51,7 @@ def NequIPGNNModel(
         l_max (int): the maximum rotation order for the network's features, ``1`` is a good default, ``2`` is more accurate but slower (default ``1``)
         parity (bool): whether to include features with odd mirror parity -- often turning parity off gives equally good results but faster networks, so it's worth testing (default ``True``)
         num_features (int/List[int]): multiplicity of the features, smaller is faster (default ``32``); it is also possible to provide the multiplicity for each irrep, e.g. for ``l_max=2`` and ``parity=False``, ``num_features=[5, 2, 7]`` refers to ``5x0e``, ``2x1o`` and ``7x2e`` features
+        type_embed_num_features (int): number of features for the type embedding layer; if not provided, defaults to ``num_features[0]`` (default ``None``)
         radial_mlp_depth (int): number of radial layers, usually 1-3 works best, smaller is faster (default ``2``)
         radial_mlp_width (int): number of hidden neurons in radial function, smaller is faster (default ``64``)
         num_bessels (int): number of Bessel basis functions (default ``8``)
@@ -80,6 +82,13 @@ def NequIPGNNModel(
         f"`num_features` should be of length `l_max + 1` ({l_max + 1}), but found `num_features={num_features}` with {len(num_features)} entries."
     )
 
+    # === type embedding ===
+    type_embed_num_features = (
+        type_embed_num_features
+        if type_embed_num_features is not None
+        else num_features[0]
+    )
+
     # === convnet ===
     # convert a single set of parameters uniformly for every layer
     feature_irreps_hidden = repr(
@@ -101,7 +110,7 @@ def NequIPGNNModel(
     # === build model ===
     model = FullNequIPGNNModel(
         irreps_edge_sh=irreps_edge_sh,
-        type_embed_num_features=num_features[0],
+        type_embed_num_features=type_embed_num_features,
         feature_irreps_hidden=feature_irreps_hidden_list,
         radial_mlp_depth=radial_mlp_depth_list,
         radial_mlp_width=radial_mlp_width_list,

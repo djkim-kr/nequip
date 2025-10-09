@@ -10,7 +10,8 @@ Most recent change on the top.
 
 
 ### Added
-- Users can specify having irreps of different multiplicites in `NequIPGNNModel` by providing `num_features` that is a list of `l_max + 1` features. E.g. for `l_max=2` and `parity=False`, `num_features=[5, 2, 7]` refers to `5x0e`, `2x1o` and `7x2e` features (see `configs/tutorial.yaml` for an example)
+- users can specify having irreps of different multiplicites in `NequIPGNNModel` by providing `num_features` that is a list of `l_max + 1` features. E.g. for `l_max=2` and `parity=False`, `num_features=[5, 2, 7]` refers to `5x0e`, `2x1o` and `7x2e` features (see `configs/tutorial.yaml` for an example)
+- users can specify `type_embed_num_features` as a separate hyperparameter to control the number of features in the type embedding layer (defaults to `num_features[0]`)
 - batched AOTI inference
 - per-edge-type cutoff can now lead to cost reduction in the LAMMPS ML-IAP interface
 - optional `--constant-fold` acceleration argument for `nequip-compile --mode aotinductor` that can provide small speed ups for PyTorch >= 2.8 (may fail with some models, please open issues if that such instances are encountered)
