@@ -21,7 +21,7 @@ Most recent change on the top.
 
 ### Changed
 - Simplified metrics manager wrappers now include maximum absolute error metrics
-
+- [Breaking] `ChemicalSpeciesToAtomTypeMapper` and `NequIPCalculator` API changed for safety and better UI with regards to atom types when using pretrained models 
 
 ## [0.15.0]
 
