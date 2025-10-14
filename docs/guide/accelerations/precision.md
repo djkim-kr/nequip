@@ -1,14 +1,16 @@
 # Precision Settings
 
-NequIP supports various precision settings that can affect both training speed and numerical accuracy.
+NequIP supports various precision settings that can affect both training speed and numerics.
+Reduced precision settings like `bf16-mixed` and TensorFloat-32 (TF32) described below apply to `float32` models (they do not affect `float64` models).
+Performance improvements will be most significant for architectures with large matrix multiplications, such as [Allegro](https://github.com/mir-group/allegro) models.
 
 ```{warning}
 Be cautious when using reduced precision during training and inference. While performance gains can be substantial, reduced precision can be detrimental for certain atomistic modeling tasks such as structure relaxations or static point calculations.
 ```
 
-## Lightning Precision Settings
+## Lightning Precision Settings for Training
 
-PyTorch Lightning provides built-in support for various precision modes through the `precision` trainer argument, e.g.:
+PyTorch Lightning provides built-in support for various precision modes during training through the `precision` [trainer](https://lightning.ai/docs/pytorch/stable/common/trainer.html) argument, e.g.:
 
 ```yaml
 trainer:
@@ -16,6 +18,18 @@ trainer:
 ```
 
 For available options and details, see the [Lightning precision documentation](https://lightning.ai/docs/pytorch/stable/common/precision_basic.html).
+
+```{warning}
+Lightning precision settings and TF32 (described below) are mutually exclusive at train time. Use one or the other, not both.
+```
+
+When using reduced precision modes like `bf16-mixed` with [train-time compilation](pt2_compilation.md), be aware that numerical differences between eager and compiled models may exceed default tolerances due to precision errors. If you encounter compilation check errors during training, you can adjust the floating point tolerance by setting the `NEQUIP_FLOAT32_MODEL_TOL` environment variable (default: `5e-5`):
+
+```bash
+export NEQUIP_FLOAT32_MODEL_TOL=1
+```
+
+Other available tolerance environment variables include `NEQUIP_FLOAT64_MODEL_TOL` (default: `1e-12`) for `float64` models and `NEQUIP_TF32_MODEL_TOL` (default: `2e-3`) for models using TF32.
 
 ## TensorFloat-32 (TF32)
 
