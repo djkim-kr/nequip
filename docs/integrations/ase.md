@@ -1,8 +1,8 @@
 # ASE
 
 ## Introduction
-The [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/) is a popular Python package providing a framework for working with atomic data, reading and writing common formats, and running various simulations and calculations. 
-INequIP provides the {class}`~nequip.ase.NequIPCalculator` for integration with ASE. See the [ASE calculator API](../api/ase.rst) for detailed documentation.
+The [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/) is a popular Python package providing a framework for working with atomic data, reading and writing common formats, and running various simulations and calculations.
+NequIP provides the {class}`~nequip.ase.NequIPCalculator` for integration with ASE. See the [ASE calculator API](../api/ase.rst) for detailed documentation.
 
 ## Creating an ASE Calculator
 
@@ -73,7 +73,7 @@ calculator = NequIPCalculator.from_compiled_model(
 The ASE convention uses eV energy units and Å length units while the NequIP framework follows the ([internally consistent](../guide/reference/faq.md#units)) units of the underlying dataset. If it is necessary to account for units conversions, users should specify conversion factors with the arguments `energy_units_to_eV` and `length_units_to_A` (see [ASE calculator API](../api/ase.rst)).
 
 ## Example Usage
-The NequIP ASE calculator can then be used for standard ASE operations. Below are a few (nonexhaustive) common examples.
+The NequIP ASE calculator can then be used for standard ASE operations. Below are a few (non-exhaustive) common examples.
 
 ### Energy-Volume Curve
 Here we use the NequIP model trained in the tutorial to compute energies and forces on various structures to create an energy volume curve.
