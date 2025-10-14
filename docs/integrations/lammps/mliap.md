@@ -4,7 +4,7 @@
 This integration is currently in beta testing. Please report any issues or inconsistencies you encounter.
 ```
 
-LAMMPS [ML-IAP](https://docs.lammps.org/Packages_details.html#pkg-ml-iap) is a LAMMPS integration that provides an interface for using machine learning potentials via the [pair_mliap](https://docs.lammps.org/pair_mliap.html) pair style. The NequIP framework provides a wrapper and workflow tools for ML-IAP integration.
+LAMMPS [ML-IAP](https://docs.lammps.org/Packages_details.html#pkg-ml-iap) is a LAMMPS integration that provides an interface for using machine learning potentials via the [pair_mliap](https://docs.lammps.org/pair_mliap.html) pair style. The NequIP framework provides a wrapper and workflow tools for ML-IAP integration with the **KOKKOS package**.
 
 ## Building ML-IAP
 
