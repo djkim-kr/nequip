@@ -6,7 +6,7 @@ It provides up to an order of magnitude acceleration over standard implementatio
 
 **Requirements:**
 
-- [PyTorch](https://pytorch.org/) >= 2.4
+- [PyTorch](https://pytorch.org/) >= 2.7
 - CUDA-compatible GPU (NVIDIA or AMD with HIP support)
 - [OpenEquivariance](https://github.com/PASSIONLab/OpenEquivariance) library installed, i.e. `pip install openequivariance`
 - GCC 9+ for compilation
@@ -44,16 +44,27 @@ OpenEquivariance composes with [`torch.compile`](https://pytorch.org/docs/stable
 ## Inference with OpenEquivariance
 
 OpenEquivariance is supported for inference with:
-- **[ASE](../../integrations/ase.md)** via TorchScript compilation using [`nequip-compile`](../getting-started/workflow.md#compilation) (AOT Inductor support is work in progress)
+
+- **[ASE](../../integrations/ase.md)** via TorchScript or AOT Inductor compilation using [`nequip-compile`](../getting-started/workflow.md#compilation)
 - **[LAMMPS](../../integrations/lammps/index.md)** via [ML-IAP integration](../../integrations/lammps/mliap.md)
 
-### ASE-TorchScript Integration
+### ASE Integration
 
-First, compile your model to TorchScript with OpenEquivariance support:
+First, compile your model with OpenEquivariance support using either TorchScript or AOT Inductor:
 
+**TorchScript compilation:**
 ```bash
 nequip-compile /path/to/model.ckpt /path/to/compiled_model.nequip.pth \
   --mode torchscript \
+  --device cuda \
+  --target ase \
+  --modifiers enable_OpenEquivariance
+```
+
+**AOT Inductor compilation (requires PyTorch >= 2.9):**
+```bash
+nequip-compile /path/to/model.ckpt /path/to/compiled_model.nequip.pt2 \
+  --mode aotinductor \
   --device cuda \
   --target ase \
   --modifiers enable_OpenEquivariance
@@ -67,7 +78,7 @@ from nequip.ase import NequIPCalculator
 
 # Load the compiled model
 calc = NequIPCalculator.from_compiled_model(
-    "/path/to/compiled_model.nequip.pth",
+    "/path/to/compiled_model.nequip.pth",  # or .nequip.pt2 for AOTI
     device="cuda"
 )
 
@@ -78,7 +89,8 @@ forces = atoms.get_forces()
 ```
 
 If `openequivariance` is not imported before model loading, you will encounter this error:
-```
+
+```text
 RuntimeError: Couldn't resolve type '{}', did you forget to add its build dependency?__torch__.torch.classes.libtorch_tp_jit.TorchJITConv
 ```
 
