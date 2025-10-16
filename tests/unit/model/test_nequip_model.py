@@ -1,6 +1,6 @@
 import pytest
 from nequip.utils.unittests.model_tests import BaseEnergyModelTests
-from nequip.utils.versions import _TORCH_GE_2_4
+from nequip.utils.versions import _TORCH_GE_2_7
 
 try:
     import openequivariance  # noqa: F401
@@ -91,7 +91,7 @@ class TestNequIPModel(BaseEnergyModelTests):
     @pytest.fixture(
         scope="class",
         params=[None]
-        + (["enable_OpenEquivariance"] if _TORCH_GE_2_4 and _OEQ_INSTALLED else [])
+        + (["enable_OpenEquivariance"] if _TORCH_GE_2_7 and _OEQ_INSTALLED else [])
         + (["enable_CuEquivariance"] if _CUEQ_INSTALLED else []),
     )
     def nequip_compile_acceleration_modifiers(self, request):
@@ -102,10 +102,11 @@ class TestNequIPModel(BaseEnergyModelTests):
         def modifier_handler(mode, device, model_dtype):
             if request.param == "enable_OpenEquivariance":
                 import openequivariance  # noqa: F401,F811
+                from nequip.utils.versions import _TORCH_GE_2_9
 
-                # TODO: test when ready (maybe PyTorch 2.8.1 or 2.9.0)
-                if mode == "aotinductor":
-                    pytest.skip("OEQ AOTI tests skipped for now")
+                # OEQ + AOTI requires PyTorch >= 2.9
+                if mode == "aotinductor" and not _TORCH_GE_2_9:
+                    pytest.skip("OEQ AOTI requires PyTorch >= 2.9")
 
                 if device == "cpu":
                     pytest.skip("OEQ tests skipped for CPU")
@@ -130,7 +131,7 @@ class TestNequIPModel(BaseEnergyModelTests):
     @pytest.fixture(
         scope="class",
         params=[None]
-        + (["enable_OpenEquivariance"] if _TORCH_GE_2_4 and _OEQ_INSTALLED else []),
+        + (["enable_OpenEquivariance"] if _TORCH_GE_2_7 and _OEQ_INSTALLED else []),
         # + (["enable_CuEquivariance"] if _CUEQ_INSTALLED else []),
         # NOTE: ^ some tests fail with CuEq
     )
@@ -163,7 +164,7 @@ class TestNequIPModel(BaseEnergyModelTests):
     @pytest.fixture(
         scope="class",
         params=[None]
-        + (["enable_OpenEquivariance"] if _TORCH_GE_2_4 and _OEQ_INSTALLED else [])
+        + (["enable_OpenEquivariance"] if _TORCH_GE_2_7 and _OEQ_INSTALLED else [])
         + (["enable_CuEquivariance"] if _CUEQ_INSTALLED else []),
     )
     def mliap_acceleration_modifiers(self, request):
