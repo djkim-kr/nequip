@@ -15,6 +15,7 @@ Most recent change on the top.
 - batched AOTI inference
 - per-edge-type cutoff can now lead to cost reduction in the LAMMPS ML-IAP interface
 - optional `--constant-fold` acceleration argument for `nequip-compile --mode aotinductor` that can provide small speed ups for PyTorch >= 2.8 (may fail with some models, please open issues if that such instances are encountered)
+- OpenEquivariance is now compatible with AOTInductor compilation for ASE inference with PyTorch >= 2.9
 
 ### Removed
 - [Breaking] `NequIPGNNEnergyModel` has been removed. Energy-only models can be constructed by using `NequIPGNNModel` with a new argument `do_derivatives=False`
@@ -22,6 +23,7 @@ Most recent change on the top.
 ### Changed
 - Simplified metrics manager wrappers now include maximum absolute error metrics
 - [Breaking] `ChemicalSpeciesToAtomTypeMapper` and `NequIPCalculator` API changed for safety and better UI with regards to atom types when using pretrained models 
+- [Breaking] raise minimum PyTorch version for OpenEquivariance to PyTorch >= 2.7 (previously >= 2.4)
 
 ## [0.15.0]
 
