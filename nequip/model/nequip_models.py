@@ -238,13 +238,14 @@ def FullNequIPGNNModel(
                 # to ensure isolated atom limit
                 "use_sc": layer_i != 0,
                 "is_first_layer": layer_i == 0,
+                # normalization parameters
+                "avg_num_neighbors": avg_num_neighbors,
+                "type_names": type_names,
             },
             resnet=(layer_i != 0) and convnet_resnet,
             nonlinearity_type=convnet_nonlinearity_type,
             nonlinearity_scalars=convnet_nonlinearity_scalars,
             nonlinearity_gates=convnet_nonlinearity_gates,
-            avg_num_neighbors=avg_num_neighbors,
-            type_names=type_names,
         )
         prev_irreps_out = current_convnet.irreps_out
         modules.update({f"layer{layer_i}_convnet": current_convnet})

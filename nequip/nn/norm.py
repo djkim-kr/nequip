@@ -20,11 +20,8 @@ class AvgNumNeighborsNorm(torch.nn.Module):
         super().__init__()
         assert avg_num_neighbors is not None, "avg_num_neighbors must be specified"
 
-        # If global avg_num_neighbors or only one type, no need to do embedding lookup in forward
-        self.norm_shortcut = len(type_names) == 1 or isinstance(
-            avg_num_neighbors, (float, int)
-        )
         self.in_field = self.out_field = AtomicDataDict.NODE_FEATURES_KEY
+        self.norm_key = AtomicDataDict.FEATURE_NORM_FACTOR_KEY
 
         # Put avg_num_neighbors in a list (global or per type)
         if isinstance(avg_num_neighbors, (float, int)):
@@ -45,12 +42,15 @@ class AvgNumNeighborsNorm(torch.nn.Module):
         # TODO remove this once we're sure FMs are not using this anymore
         self.register_buffer("norm_const", norm_const, persistent=False)
 
+        # If global avg_num_neighbors or only one type, no need to do embedding lookup in forward
+        self.norm_shortcut = self.norm_const.numel() == 1
+
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         features = data[self.in_field]
         norm_size = features.size(0)
-        norm_key = AtomicDataDict.FEATURE_NORM_FACTOR_KEY
-        if norm_key in data and data[norm_key].size(0) == norm_size:
-            norm_factor = data[norm_key]
+
+        if self.norm_key in data and data[self.norm_key].size(0) == norm_size:
+            norm_factor = data[self.norm_key]
         else:
             # Compute norm factor for the first time
             if self.norm_shortcut:
@@ -62,7 +62,7 @@ class AvgNumNeighborsNorm(torch.nn.Module):
                     data[AtomicDataDict.ATOM_TYPE_KEY][:norm_size],
                     self.norm_const,
                 )
-            data[norm_key] = norm_factor  # shape: (num_local_nodes, 1)
+            data[self.norm_key] = norm_factor  # shape: (num_local_nodes, 1)
 
         data[self.out_field] = norm_factor * features
         return data

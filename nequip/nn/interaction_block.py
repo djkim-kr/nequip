@@ -13,8 +13,9 @@ from ._graph_mixin import GraphModuleMixin
 from .mlp import ScalarMLPFunction
 from ._ghost_exchange_base import NoOpGhostExchangeModule
 from ._tp_scatter_base import TensorProductScatter
+from .norm import AvgNumNeighborsNorm
 
-from typing import Optional
+from typing import Sequence, Union, Dict
 
 
 class InteractionBlock(GraphModuleMixin, torch.nn.Module):
@@ -26,9 +27,10 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
         irreps_out,
         radial_mlp_depth: int = 1,
         radial_mlp_width: int = 8,
-        avg_num_neighbors_norm: Optional[torch.nn.Module] = None,
         use_sc: bool = True,
         is_first_layer: bool = False,
+        avg_num_neighbors: Union[float, Dict[str, float]] = None,
+        type_names: Sequence[str] = None,
     ) -> None:
         """InteractionBlock.
 
@@ -37,9 +39,10 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
             irreps_out: output irreps
             radial_mlp_depth (int): number of radial layers
             radial_mlp_width (int): number of hidden neurons in radial function
-            avg_num_neighbors_norm (torch.nn.Module): module for normalization (default ``None``, i.e. no normalization)
-            type_names (List[str]): list of type names
             use_sc (bool): use self-connection or not
+            is_first_layer (bool): whether to use first layer (default ``False``)
+            avg_num_neighbors (float/Dict[str, float]): global (float) or per-type (dict) average number of neighbors
+            type_names (List[str]): list of type names
         """
         super().__init__()
 
@@ -64,8 +67,11 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
             irreps_out={AtomicDataDict.NODE_FEATURES_KEY: irreps_out},
         )
 
-        # === normalization ===
-        self.avg_num_neighbors_norm = avg_num_neighbors_norm
+
+        # === normalization module ===
+        self.avg_num_neighbors_norm = AvgNumNeighborsNorm(
+            avg_num_neighbors=avg_num_neighbors, type_names=type_names
+        )
 
         self.use_sc = use_sc
 
