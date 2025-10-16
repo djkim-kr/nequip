@@ -67,7 +67,6 @@ class InteractionBlock(GraphModuleMixin, torch.nn.Module):
             irreps_out={AtomicDataDict.NODE_FEATURES_KEY: irreps_out},
         )
 
-
         # === normalization module ===
         self.avg_num_neighbors_norm = AvgNumNeighborsNorm(
             avg_num_neighbors=avg_num_neighbors, type_names=type_names
