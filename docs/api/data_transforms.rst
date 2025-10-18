@@ -14,3 +14,6 @@ Data transforms convert the raw data from the :class:`~nequip.data.dataset.Atomi
 
 .. autoclass:: nequip.data.transforms.StressSignFlipTransform
     :members:
+
+.. autoclass:: nequip.data.transforms.AddNaNStressTransform
+    :members:

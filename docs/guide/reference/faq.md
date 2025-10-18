@@ -52,6 +52,48 @@
 
   These components are specifically designed for energy-only training and will not attempt to compute force-related statistics or metrics that would cause errors with datasets lacking force labels.
 
+## Partial Stress Data
+
+  **Q**: How do I train on datasets where only some structures have stress labels?
+
+  **A**: For datasets with partial stress coverage (where stress labels are unavailable for some structures), use the following approach:
+
+  1. **Add the transform**: Include {class}`~nequip.data.transforms.AddNaNStressTransform` in your transforms list to populate missing stress labels with NaN values:
+     ```yaml
+     transforms:
+       - _target_: nequip.data.transforms.AddNaNStressTransform
+       - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
+         model_type_names: ${model_type_names}
+       - _target_: nequip.data.transforms.NeighborListTransform
+         r_max: 5.0
+     ```
+
+  2. **Configure loss**: Use {class}`~nequip.train.EnergyForceStressLoss` with the `ignore_nan` parameter to skip stress in loss computation for structures without labels:
+     ```yaml
+     loss:
+       _target_: nequip.train.EnergyForceStressLoss
+       coeffs:
+         total_energy: 1.0
+         forces: 1.0
+         stress: 1.0
+       ignore_nan:
+         stress: true
+     ```
+
+  3. **Configure metrics**: Similarly, use {class}`~nequip.train.EnergyForceStressMetrics` with `ignore_nan`:
+     ```yaml
+     val_metrics:
+       _target_: nequip.train.EnergyForceStressMetrics
+       coeffs:
+         total_energy_rmse: 1.0
+         forces_rmse: 1.0
+         stress_rmse: 1.0
+       ignore_nan:
+         stress: true
+     ```
+
+  The loss and metrics will only be computed on frames with valid (non-NaN) stress labels.
+
 ## Upgrading from pre-`0.7.0` `nequip`
 
 ```{warning}

@@ -120,7 +120,13 @@ transforms:
 **Transform Order May Matter**: The order of transforms can be important for some configurations. For example, when using per-edge-type cutoffs in {class}`~nequip.data.transforms.NeighborListTransform`, the {class}`~nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper` must come before {class}`~nequip.data.transforms.NeighborListTransform` because the neighborlist transform needs atom type information to apply different cutoffs for different element pairs.
 ```
 
-Additional transforms are available for specific use cases. For stress-related data, you may need {class}`~nequip.data.transforms.VirialToStressTransform` (converts virial to stress tensors) or {class}`~nequip.data.transforms.StressSignFlipTransform` (handles different stress sign conventions). For a complete list of available transforms, see the [transforms API documentation](../../api/data_transforms.rst).
+Additional transforms are available for specific use cases. For stress-related data, you may need:
+
+- {class}`~nequip.data.transforms.VirialToStressTransform` - converts virial to stress tensors
+- {class}`~nequip.data.transforms.StressSignFlipTransform` - handles different stress sign conventions
+- {class}`~nequip.data.transforms.AddNaNStressTransform` - adds NaN stress tensors for structures without stress data (useful for datasets with partial stress coverage, see [Partial Stress Data FAQ](../reference/faq.md#partial-stress-data))
+
+For a complete list of available transforms, see the [transforms API documentation](../../api/data_transforms.rst).
 
 ## DataLoaders
 
