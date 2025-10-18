@@ -1,6 +1,7 @@
 import pytest
 import torch
 from nequip.data import AtomicDataDict, PerAtomModifier
+from nequip.data.transforms import AddNaNStressTransform
 from nequip.train import (
     MetricsManager,
     MeanAbsoluteError,
@@ -326,6 +327,68 @@ class TestNaN:
         )
 
         assert torch.isclose(metrics_dict["per_atom_E_MSE"], loss_ref)
+
+    def test_stress_with_nan_transform(self, data):
+        """Test EnergyForceStressLoss/Metrics with AddNaNStressTransform for partial stress data."""
+        # get original fixture with stress
+        pred1, ref1, _, _ = data
+
+        # create a duplicate without stress key to simulate missing stress data
+        pred2 = {k: torch.clone(v) for k, v in pred1.items()}
+        ref2 = {k: torch.clone(v) for k, v in ref1.items()}
+        del ref2[AtomicDataDict.STRESS_KEY]
+
+        # apply AddNaNStressTransform to add NaN stress tensors
+        transform = AddNaNStressTransform()
+        ref2 = transform(ref2)
+
+        # verify transform added NaN stress
+        assert AtomicDataDict.STRESS_KEY in pred2
+        assert AtomicDataDict.STRESS_KEY in ref2
+        assert torch.all(torch.isnan(ref2[AtomicDataDict.STRESS_KEY]))
+
+        # batch the two samples together into a single batch
+        # so we have mixed stress tensors (some frames with real stress, some with NaN)
+        pred_batched = AtomicDataDict.batched_from_list([pred1, pred2])
+        ref_batched = AtomicDataDict.batched_from_list([ref1, ref2])
+
+        # verify we have mixed stress (some real, some NaN)
+        assert not torch.all(torch.isnan(ref_batched[AtomicDataDict.STRESS_KEY]))
+        assert torch.any(torch.isnan(ref_batched[AtomicDataDict.STRESS_KEY]))
+
+        # test with loss function - ignore_nan should handle mixed stress
+        mm_loss = EnergyForceStressLoss(
+            coeffs={
+                AtomicDataDict.TOTAL_ENERGY_KEY: 1.0,
+                AtomicDataDict.FORCE_KEY: 1.0,
+                AtomicDataDict.STRESS_KEY: 1.0,
+            },
+            ignore_nan={AtomicDataDict.STRESS_KEY: True},
+        )
+
+        # pass batched data with mixed stress
+        metrics = mm_loss(pred_batched, ref_batched)
+        assert "per_atom_energy_mse" in metrics
+        assert "forces_mse" in metrics
+        assert "stress_mse" in metrics
+
+        # test with metrics function
+        mm_metrics = EnergyForceStressMetrics(
+            coeffs={
+                "total_energy_rmse": 1.0,
+                "forces_rmse": 1.0,
+                "stress_rmse": 1.0,
+            },
+            ignore_nan={AtomicDataDict.STRESS_KEY: True},
+        )
+
+        # pass batched data
+        metrics = mm_metrics(pred_batched, ref_batched)
+        assert "stress_rmse" in metrics
+        assert "stress_mae" in metrics
+        assert "stress_maxabserr" in metrics
+        assert "total_energy_rmse" in metrics
+        assert "forces_rmse" in metrics
 
 
 @pytest.fixture(scope="function")
