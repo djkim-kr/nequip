@@ -43,3 +43,24 @@ class StressSignFlipTransform:
         # see discussion in https://github.com/libAtoms/QUIP/issues/227 about sign convention
         data[AtomicDataDict.STRESS_KEY] = data[AtomicDataDict.STRESS_KEY].neg()
         return data
+
+
+class AddNaNStressTransform:
+    """Add NaN stress tensors for structures without stress data.
+
+    Useful for datasets where stresses are not available for all structures.
+    The NaN values can be ignored during loss computation and metrics calculation
+    by using the ``ignore_nan`` flag in loss functions and metrics.
+    """
+
+    def __init__(self):
+        pass
+
+    def __call__(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+        # only add if stress is not already present
+        if AtomicDataDict.STRESS_KEY not in data:
+            num_frames = AtomicDataDict.num_frames(data)
+            data[AtomicDataDict.STRESS_KEY] = torch.full(
+                (num_frames, 3, 3), float("nan"), dtype=torch.get_default_dtype()
+            )
+        return data
