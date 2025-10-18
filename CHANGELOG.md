@@ -16,6 +16,7 @@ Most recent change on the top.
 - per-edge-type cutoff can now lead to cost reduction in the LAMMPS ML-IAP interface
 - optional `--constant-fold` acceleration argument for `nequip-compile --mode aotinductor` that can provide small speed ups for PyTorch >= 2.8 (may fail with some models, please open issues if that such instances are encountered)
 - OpenEquivariance is now compatible with AOTInductor compilation for ASE inference with PyTorch >= 2.9
+- better handling of datasets where stresses are partially populated, e.g. `AddNaNStressTransform` added to add NaN stress tensors for structures without stress data
 
 ### Removed
 - [Breaking] `NequIPGNNEnergyModel` has been removed. Energy-only models can be constructed by using `NequIPGNNModel` with a new argument `do_derivatives=False`
