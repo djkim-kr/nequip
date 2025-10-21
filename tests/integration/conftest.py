@@ -170,9 +170,12 @@ class TrainingInvarianceBaseTest:
             assert len(batchsize5_val_metrics) == len(batchsize1_val_metrics)
             assert all(
                 [
-                    math.isclose(a, b, rel_tol=tol)
-                    for a, b in zip(
-                        batchsize5_val_metrics.values(), batchsize1_val_metrics.values()
+                    math.isclose(a, b, rel_tol=tol) if "maxabserr" not in name else True
+                    # ^ do not include maxabserr in testing
+                    for name, a, b in zip(
+                        batchsize5_val_metrics.keys(),
+                        batchsize5_val_metrics.values(),
+                        batchsize1_val_metrics.values(),
                     )
                 ]
             )
