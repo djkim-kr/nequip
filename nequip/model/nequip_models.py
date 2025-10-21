@@ -71,9 +71,7 @@ def NequIPGNNModel(
     )
 
     # === spherical harmonics ===
-    irreps_edge_sh = repr(
-        o3.Irreps.spherical_harmonics(lmax=l_max, p=-1 if parity else 1)
-    )
+    irreps_edge_sh = repr(o3.Irreps.spherical_harmonics(lmax=l_max))
 
     # === handle `num_features` ===
     if isinstance(num_features, int):
@@ -95,8 +93,10 @@ def NequIPGNNModel(
         o3.Irreps(
             [
                 (num_features[l], (l, p))
-                for p in ((1, -1) if parity else (1,))
                 for l in range(l_max + 1)
+                for p in (
+                    (1, -1) if parity else ((1,) if l % 2 == 0 else (-1,))
+                )  # p = 1 for even l, -1 for odd l, with parity = False
             ]
         )
     )
