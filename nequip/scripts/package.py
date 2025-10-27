@@ -5,7 +5,7 @@ import torch
 from nequip.model.saved_models.package import (
     _get_shared_importer,
     _get_package_metadata,
-    _suppress_package_importer_warnings,
+    _suppress_package_importer_exporter_warnings,
 )
 from nequip.model.saved_models import load_saved_model
 from nequip.model.utils import (
@@ -100,7 +100,7 @@ def main(args=None):
             "packed model file to inspect must end with the `.nequip.zip` extension"
         )
 
-        with _suppress_package_importer_warnings():
+        with _suppress_package_importer_exporter_warnings():
             imp = torch.package.PackageImporter(args.pkg_path)
             pkg_metadata = _get_package_metadata(imp)
 
@@ -250,7 +250,7 @@ def main(args=None):
             models_to_package.update({compile_mode: model})
 
         # == package ==
-        with _suppress_package_importer_warnings():
+        with _suppress_package_importer_exporter_warnings():
             with torch.package.PackageExporter(
                 args.output_path, importer=importers, debug=True
             ) as exp:

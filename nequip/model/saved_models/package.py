@@ -51,7 +51,7 @@ def _get_package_metadata(imp) -> Dict[str, Any]:
 
 
 @contextlib.contextmanager
-def _suppress_package_importer_warnings():
+def _suppress_package_importer_exporter_warnings():
     # Ideally this ceases to exist or becomes a no-op in future versions of PyTorch
     with warnings.catch_warnings():
         # suppress torch.package TypedStorage warning
@@ -59,7 +59,7 @@ def _suppress_package_importer_warnings():
             "ignore",
             message="TypedStorage is deprecated.*",
             category=UserWarning,
-            module="torch.package.package_importer",
+            module=r"torch\.package\.(package_exporter|package_importer)",
         )
         yield
 
@@ -104,7 +104,7 @@ def ModelFromPackage(package_path: str, compile_mode: str = _EAGER_MODEL_KEY):
 
     # === load model ===
     logger.info(f"Loading model from package file: {package_path} ...")
-    with _suppress_package_importer_warnings():
+    with _suppress_package_importer_exporter_warnings():
         # during `nequip-package`, we need to use the same importer for all the models for successful repackaging
         # see https://pytorch.org/docs/stable/package.html#re-export-an-imported-object
         if workflow_state == "package":
@@ -141,7 +141,7 @@ def ModelFromPackage(package_path: str, compile_mode: str = _EAGER_MODEL_KEY):
 
 def data_dict_from_package(package_path: str) -> AtomicDataDict.Type:
     """Load example data from a .nequip.zip package file."""
-    with _suppress_package_importer_warnings():
+    with _suppress_package_importer_exporter_warnings():
         imp = torch.package.PackageImporter(package_path)
         data = imp.load_pickle(package="model", resource="example_data.pkl")
     return data
@@ -159,7 +159,7 @@ def ModelTypeNamesFromPackage(package_path: str):
 
     _check_file_exists(file_path=package_path, file_type="package")
 
-    with _suppress_package_importer_warnings():
+    with _suppress_package_importer_exporter_warnings():
         imp = torch.package.PackageImporter(package_path)
         pkg_metadata = _get_package_metadata(imp)
 
