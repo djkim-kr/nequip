@@ -286,6 +286,8 @@ def main(args=None):
 
                 # save models
                 for compile_mode, model in models_to_package.items():
+                    # make sure model is on CPU before packaging
+                    model = model.to(torch.device("cpu"))
                     exp.save_pickle(
                         package="model",
                         resource=f"{compile_mode}_model.pkl",
