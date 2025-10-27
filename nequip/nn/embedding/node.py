@@ -38,7 +38,7 @@ class NodeTypeEmbed(GraphModuleMixin, torch.nn.Module):
         num_features: int,
         set_features: bool = True,
         categorical_graph_field_embed: Optional[List[Dict[str, int]]] = None,
-        irreps_in=None,
+        irreps_in={},
     ):
         super().__init__()
         # === bookkeeping ===
@@ -85,6 +85,12 @@ class NodeTypeEmbed(GraphModuleMixin, torch.nn.Module):
 
                 # == bookkeeping ==
                 total_features += field_embed["num_features"]
+
+                # register `irreps_in`` if not already done
+                # needed to ensure that the field is propagated into the model
+                if field_embed["field"] not in irreps_in:
+                    # categorical, so no irreps
+                    irreps_in[field_embed["field"]] = None
 
         irreps_out = {AtomicDataDict.NODE_ATTRS_KEY: Irreps([(total_features, (0, 1))])}
         if self.set_features:
