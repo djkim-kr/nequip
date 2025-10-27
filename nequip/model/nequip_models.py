@@ -187,9 +187,19 @@ def FullNequIPGNNModel(
         )
 
     # === encode and embed features ===
+    # == node scalar embedding ==
+    # NOTE: node embed is done first in case we need to pass in categorical graph fields as inputs
+    # see how `irreps_in` is registered in the `NodeTypeEmbed` class
+    type_embed = NodeTypeEmbed(
+        type_names=type_names,
+        num_features=type_embed_num_features,
+        categorical_graph_field_embed=categorical_graph_field_embed,
+    )
+
     # == edge tensor embedding ==
     spharm = SphericalHarmonicEdgeAttrs(
         irreps_edge_sh=irreps_edge_sh,
+        irreps_in=type_embed.irreps_out,
     )
     # == edge scalar embedding ==
     edge_norm = EdgeLengthNormalizer(
@@ -211,21 +221,15 @@ def FullNequIPGNNModel(
         factor=(2 * math.pi) / (r_max * r_max),
         irreps_in=bessel_encode.irreps_out,
     )
-    # == node scalar embedding ==
-    type_embed = NodeTypeEmbed(
-        type_names=type_names,
-        num_features=type_embed_num_features,
-        categorical_graph_field_embed=categorical_graph_field_embed,
-        irreps_in=factor.irreps_out,
-    )
+
     modules = {
+        "type_embed": type_embed,
         "spharm": spharm,
         "edge_norm": edge_norm,
         "bessel_encode": bessel_encode,
         "factor": factor,
-        "type_embed": type_embed,
     }
-    prev_irreps_out = type_embed.irreps_out
+    prev_irreps_out = factor.irreps_out
 
     # === convnet layers ===
     for layer_i in range(num_layers):
