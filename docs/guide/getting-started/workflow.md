@@ -152,6 +152,27 @@ The `--target` flag wraps the `--input-fields` and `--output-fields` options. De
 If performing training and inference on separate machines, with possibly different Python, CUDA, or hardware environments, consider [packaging](#packaging) the trained model and transferring the packaged model to the inference machine and running `nequip-compile` on it there.
 ```
 
+### Compiling models from nequip.net
+
+Models from [nequip.net](https://www.nequip.net/) can be compiled directly using the `nequip.net:` syntax:
+
+```bash
+nequip-compile \
+  nequip.net:mir-group/NequIP-OAM-L:0.1 \
+  path/to/compiled_model.nequip.pt2 \
+  --device cuda \
+  --mode aotinductor \
+  --target ase
+```
+
+The format is `nequip.net:group-name/model-name:version`, where you can find the full model ID on the model's page at [nequip.net](https://www.nequip.net/).
+
+Models are automatically downloaded and cached for compilation in `~/.nequip/model_cache` (configurable via the `NEQUIP_CACHE_DIR` environment variable).
+The first compilation will download the model from the server, but subsequent compilations will use the cached model instantly.
+Cached files are validated using cryptographic hashes to ensure integrity.
+
+To bypass the cache for a single run, set `NEQUIP_NO_CACHE=1` (or `true`, `yes`, `y`). To re-enable caching, unset the variable or set it to any other value like `NEQUIP_NO_CACHE=0`.
+
 ## Production Simulations
 
 Once a model has been [trained](#training) and [compiled](#compilation) it can be used to run production simulations in our supported [integrations](../../integrations/all.rst) with other codes and simulation engines, including [LAMMPS](../../integrations/lammps/index.md) and [ASE](../../integrations/ase.md).
