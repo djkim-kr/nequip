@@ -10,24 +10,9 @@ from nequip.utils.compile import conditional_torchscript_jit
 from nequip.data import AtomicDataDict
 from .._graph_mixin import GraphModuleMixin
 from ..utils import with_edge_vectors_
+from .utils import cutoff_partialdict_to_tensor
 
 from typing import Optional, List, Dict, Union
-
-
-def _process_per_edge_type_cutoff(
-    type_names: List[str], per_edge_type_cutoff, r_max: float
-) -> torch.Tensor:
-    """Process partial cutoff dict to tensor (legacy wrapper).
-
-    Use cutoff_partialdict_to_fulldict + cutoff_fulldict_to_tensor for new code.
-    """
-    from .utils import cutoff_partialdict_to_fulldict, cutoff_fulldict_to_tensor
-
-    full_dict = cutoff_partialdict_to_fulldict(per_edge_type_cutoff, type_names, r_max)
-    cutoff_tensor = cutoff_fulldict_to_tensor(full_dict, type_names)
-    # add validation that was in original implementation
-    assert torch.all(cutoff_tensor <= r_max)
-    return cutoff_tensor
 
 
 @compile_mode("script")
@@ -59,8 +44,8 @@ class EdgeLengthNormalizer(GraphModuleMixin, torch.nn.Module):
         if per_edge_type_cutoff is not None:
             # process per_edge_type_cutoff
             self._per_edge_type = True
-            per_edge_type_cutoff = _process_per_edge_type_cutoff(
-                type_names, per_edge_type_cutoff, self.r_max
+            per_edge_type_cutoff = cutoff_partialdict_to_tensor(
+                per_edge_type_cutoff, type_names, self.r_max
             )
             # compute 1/rmax and flatten for how they're used in forward, i.e. (n_type, n_type) -> (n_type^2,)
             rmax_recip = per_edge_type_cutoff.reciprocal().view(-1)

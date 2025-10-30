@@ -127,6 +127,18 @@ def cutoff_str_to_fulldict(
     return full_dict
 
 
+def cutoff_partialdict_to_tensor(
+    partial_dict: Dict[str, Union[float, Dict[str, float]]],
+    type_names: List[str],
+    r_max: float,
+) -> torch.Tensor:
+    """Composes ``cutoff_partialdict_to_fulldict`` and ``cutoff_fulldict_to_tensor``."""
+    full_dict = cutoff_partialdict_to_fulldict(partial_dict, type_names, r_max)
+    cutoff_tensor = cutoff_fulldict_to_tensor(full_dict, type_names)
+    assert torch.all(cutoff_tensor <= r_max)
+    return cutoff_tensor
+
+
 # legacy function names for backward compatibility
 def per_edge_type_cutoff_to_metadata_str(
     type_names: List[str],
