@@ -17,36 +17,17 @@ from typing import Optional, List, Dict, Union
 def _process_per_edge_type_cutoff(
     type_names: List[str], per_edge_type_cutoff, r_max: float
 ) -> torch.Tensor:
-    num_types: int = len(type_names)
+    """Process partial cutoff dict to tensor (legacy wrapper).
 
-    # map dicts from type name to thing into lists
-    processed_cutoffs = {}
-    for source_type in type_names:
-        if source_type in per_edge_type_cutoff:
-            e = per_edge_type_cutoff[source_type]
-            if not isinstance(e, float):
-                cutoffs_for_source = []
-                for target_type in type_names:
-                    if target_type in e:
-                        cutoffs_for_source.append(e[target_type])
-                    else:
-                        # default missing target types to `r_max`
-                        cutoffs_for_source.append(r_max)
-                processed_cutoffs[source_type] = cutoffs_for_source
-            else:
-                processed_cutoffs[source_type] = [e] * num_types
-        else:
-            # default missing source types to `r_max`
-            processed_cutoffs[source_type] = [r_max] * num_types
+    Use cutoff_partialdict_to_fulldict + cutoff_fulldict_to_tensor for new code.
+    """
+    from .utils import cutoff_partialdict_to_fulldict, cutoff_fulldict_to_tensor
 
-    per_edge_type_cutoff = [processed_cutoffs[k] for k in type_names]
-    per_edge_type_cutoff = torch.as_tensor(
-        per_edge_type_cutoff, dtype=_GLOBAL_DTYPE
-    ).contiguous()
-    assert per_edge_type_cutoff.shape == (num_types, num_types)
-    assert torch.all(per_edge_type_cutoff > 0)
-    assert torch.all(per_edge_type_cutoff <= r_max)
-    return per_edge_type_cutoff
+    full_dict = cutoff_partialdict_to_fulldict(per_edge_type_cutoff, type_names, r_max)
+    cutoff_tensor = cutoff_fulldict_to_tensor(full_dict, type_names)
+    # add validation that was in original implementation
+    assert torch.all(cutoff_tensor <= r_max)
+    return cutoff_tensor
 
 
 @compile_mode("script")
