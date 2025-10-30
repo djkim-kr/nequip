@@ -137,10 +137,3 @@ def per_edge_type_cutoff_to_metadata_str(
     full_dict = cutoff_partialdict_to_fulldict(per_edge_type_cutoff, type_names, r_max)
     tensor = cutoff_fulldict_to_tensor(full_dict, type_names)
     return cutoff_tensor_to_str(tensor)
-
-
-def parse_per_edge_type_cutoff_metadata(
-    cutoff_str: str, type_names: List[str]
-) -> Dict[str, Dict[str, float]]:
-    """Parse metadata string to full dict (legacy)."""
-    return cutoff_str_to_fulldict(cutoff_str, type_names)

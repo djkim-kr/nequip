@@ -292,9 +292,9 @@ def _create_neighbor_transform(
     if metadata.get(graph_model.PER_EDGE_TYPE_CUTOFF_KEY, None) is not None:
         per_edge_type_cutoff = metadata[graph_model.PER_EDGE_TYPE_CUTOFF_KEY]
         if isinstance(per_edge_type_cutoff, str):
-            from nequip.nn.embedding.utils import parse_per_edge_type_cutoff_metadata
+            from nequip.nn.embedding.utils import cutoff_str_to_fulldict
 
-            per_edge_type_cutoff = parse_per_edge_type_cutoff_metadata(
+            per_edge_type_cutoff = cutoff_str_to_fulldict(
                 per_edge_type_cutoff, type_names
             )
 
