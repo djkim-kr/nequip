@@ -139,13 +139,12 @@ def cutoff_partialdict_to_tensor(
     return cutoff_tensor
 
 
-# legacy function names for backward compatibility
-def per_edge_type_cutoff_to_metadata_str(
+def cutoff_partialdict_to_str(
+    partial_dict: Dict[str, Union[float, Dict[str, float]]],
     type_names: List[str],
-    per_edge_type_cutoff: Dict[str, Union[float, Dict[str, float]]],
     r_max: float,
 ) -> str:
-    """Convert partial dict to metadata string (legacy)."""
-    full_dict = cutoff_partialdict_to_fulldict(per_edge_type_cutoff, type_names, r_max)
+    """Composes ``cutoff_partialdict_to_fulldict``, ``cutoff_fulldict_to_tensor``, and ``cutoff_tensor_to_str``."""
+    full_dict = cutoff_partialdict_to_fulldict(partial_dict, type_names, r_max)
     tensor = cutoff_fulldict_to_tensor(full_dict, type_names)
     return cutoff_tensor_to_str(tensor)
