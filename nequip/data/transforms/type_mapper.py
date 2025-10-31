@@ -7,7 +7,7 @@ from nequip.data import AtomicDataDict
 from typing import List, Dict, Optional
 
 
-class ChemicalSpeciesToAtomTypeMapper:
+class ChemicalSpeciesToAtomTypeMapper(torch.nn.Module):
     """Maps atomic numbers to atom types and adds the atom types to the ``AtomicDataDict``.
 
     This transform accounts for how the atom types seen by the model can be different from the atomic species that one obtains from a conventional dataset. There could be cases where the same chemical species corresponds to multiple atom types, e.g. different charge states.
@@ -23,6 +23,8 @@ class ChemicalSpeciesToAtomTypeMapper:
         chemical_species_to_atom_type_map: Optional[Dict[str, str]] = None,
         chemical_symbols: Optional[List[str]] = None,
     ):
+        super().__init__()
+
         # TODO: eventually remove all this logic
         # error out with deprecated API usage
         if chemical_symbols is not None:
@@ -68,7 +70,7 @@ class ChemicalSpeciesToAtomTypeMapper:
                 )
 
         # make a lookup table mapping atomic numbers to 0-based model type indexes
-        self.lookup_table = torch.full(
+        lookup_table = torch.full(
             (max(ase.data.atomic_numbers.values()),), -1, dtype=torch.long
         )
 
@@ -78,9 +80,11 @@ class ChemicalSpeciesToAtomTypeMapper:
                 raise ValueError(f"Invalid chemical symbol '{chem_symbol}'")
             atomic_num = ase.data.atomic_numbers[chem_symbol]
             type_idx = type_name_to_index[atom_type_name]
-            self.lookup_table[atomic_num] = type_idx
+            lookup_table[atomic_num] = type_idx
 
-    def __call__(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+        self.register_buffer("lookup_table", lookup_table)
+
+    def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         if AtomicDataDict.ATOM_TYPE_KEY in data:
             raise RuntimeError(f"Data already contains {AtomicDataDict.ATOM_TYPE_KEY}")
 

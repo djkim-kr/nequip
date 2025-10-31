@@ -3,7 +3,7 @@ import torch
 from nequip.data import AtomicDataDict
 
 
-class VirialToStressTransform:
+class VirialToStressTransform(torch.nn.Module):
     r"""Converts virials to stress and adds the stress to the ``AtomicDataDict``.
 
     Specifically implements
@@ -15,9 +15,9 @@ class VirialToStressTransform:
     """
 
     def __init__(self):
-        pass
+        super().__init__()
 
-    def __call__(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+    def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         # see discussion in https://github.com/libAtoms/QUIP/issues/227 about sign convention
         # they say the standard convention is virial = -stress x volume
         # we assume that the AtomicDataDict contains virials
@@ -29,7 +29,7 @@ class VirialToStressTransform:
         return data
 
 
-class StressSignFlipTransform:
+class StressSignFlipTransform(torch.nn.Module):
     r"""Flips the sign of stress in the ``AtomicDataDict``.
 
     In the NequIP convention, positive diagonal components of the stress tensor implies that the system is under tensile strain and wants to compress, while a negative value implies that the system is under compressive strain and wants to expand.
@@ -37,15 +37,15 @@ class StressSignFlipTransform:
     """
 
     def __init__(self):
-        pass
+        super().__init__()
 
-    def __call__(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+    def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         # see discussion in https://github.com/libAtoms/QUIP/issues/227 about sign convention
         data[AtomicDataDict.STRESS_KEY] = data[AtomicDataDict.STRESS_KEY].neg()
         return data
 
 
-class AddNaNStressTransform:
+class AddNaNStressTransform(torch.nn.Module):
     """Add NaN stress tensors for structures without stress data.
 
     Useful for datasets where stresses are not available for all structures.
@@ -54,9 +54,9 @@ class AddNaNStressTransform:
     """
 
     def __init__(self):
-        pass
+        super().__init__()
 
-    def __call__(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+    def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         # only add if stress is not already present
         if AtomicDataDict.STRESS_KEY not in data:
             num_frames = AtomicDataDict.num_frames(data)

@@ -5,7 +5,7 @@ from nequip.data._key_registry import get_field_type
 from typing import Optional, Dict, Union, List
 
 
-class NeighborListTransform:
+class NeighborListTransform(torch.nn.Module):
     """Constructs a neighborlist and adds it to the ``AtomicDataDict``.
 
     Args:
@@ -23,6 +23,8 @@ class NeighborListTransform:
         type_names: Optional[List[str]] = None,
         **kwargs,
     ):
+        super().__init__()
+
         self.r_max = r_max
         self.type_names = type_names
         self.per_edge_type_cutoff = per_edge_type_cutoff
@@ -40,7 +42,7 @@ class NeighborListTransform:
                 type_names=type_names,
             )
 
-    def __call__(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+    def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         data = compute_neighborlist_(data, self.r_max, **self.kwargs)
 
         # prune based on per-edge-type cutoffs if specified
@@ -50,7 +52,7 @@ class NeighborListTransform:
         return data
 
 
-class NeighborListPruneTransform:
+class NeighborListPruneTransform(torch.nn.Module):
     """Prunes a neighborlist based on per-edge-type cutoffs.
 
     Args:
@@ -65,6 +67,8 @@ class NeighborListPruneTransform:
         per_edge_type_cutoff: Dict[str, Union[float, Dict[str, float]]],
         type_names: List[str],
     ):
+        super().__init__()
+
         self.r_max = r_max
         self.per_edge_type_cutoff = per_edge_type_cutoff
         self.type_names = type_names
@@ -78,7 +82,7 @@ class NeighborListPruneTransform:
             per_edge_type_cutoff=per_edge_type_cutoff,
         )
 
-    def __call__(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+    def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         """Prune neighbor list based on per-edge-type cutoffs."""
 
         if AtomicDataDict.ATOM_TYPE_KEY not in data:
@@ -114,9 +118,9 @@ class NeighborListPruneTransform:
 class SortedNeighborListTransform(NeighborListTransform):
     """Behaves like :class:`NeighborListTransform` but additionally sorts the neighborlist and provides transpose permutation indices."""
 
-    def __call__(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+    def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         # first compute the basic neighborlist
-        data = super().__call__(data)
+        data = super().forward(data)
 
         # sort the edge index and corresponding edge attributes
         edge_idxs = data[AtomicDataDict.EDGE_INDEX_KEY]
