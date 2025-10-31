@@ -12,24 +12,21 @@ from nequip.data.transforms import (
     NeighborListTransform,
 )
 from nequip.ase import NequIPCalculator
-from nequip.utils.unittests.model_tests import BaseEnergyModelTests
+from nequip.utils.unittests.model_tests_basic import EnergyModelTestsMixin
 
 
 _ZBL_TEST_RMAX: float = 8.0  # see zbl_data.lmps
 
 
-class TestZBLModel(BaseEnergyModelTests):
+class TestZBLModel(EnergyModelTestsMixin):
+    """ZBL pair potential tests.
+
+    Inherits from EnergyModelTestsMixin directly to get basic + energy tests.
+    """
+
     @pytest.fixture
     def strict_locality(self):
         return True
-
-    @pytest.mark.skip(reason="Skip compile tests for ZBL models.")
-    def test_nequip_compile(self):
-        pass
-
-    @pytest.mark.skip(reason="Skip LAMMPS ML-IAP tests for ZBL models.")
-    def test_mliap_integration(self):
-        pass
 
     @pytest.fixture(scope="class")
     def config(self):
