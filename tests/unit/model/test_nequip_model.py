@@ -1,5 +1,6 @@
 import pytest
-from nequip.utils.unittests.model_tests import BaseEnergyModelTests
+from nequip.utils.unittests.model_tests_compilation import CompilationTestsMixin
+from nequip.utils.unittests.model_tests_lammps import LAMMPSMLIAPIntegrationMixin
 from nequip.utils.versions import _TORCH_GE_2_7
 
 try:
@@ -69,7 +70,9 @@ minimal_config4 = dict(
 )
 
 
-class TestNequIPModel(BaseEnergyModelTests):
+class TestNequIPModel(CompilationTestsMixin, LAMMPSMLIAPIntegrationMixin):
+    """NequIP model tests."""
+
     @pytest.fixture
     def strict_locality(self):
         return False
