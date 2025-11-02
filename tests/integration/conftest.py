@@ -156,29 +156,37 @@ class TrainingInvarianceBaseTest:
             print(orig_train_loss)
             print(new_train_loss)
             assert len(orig_train_loss) == len(new_train_loss)
-            assert all(
-                [
-                    math.isclose(a, b, rel_tol=tol)
-                    for a, b in zip(orig_train_loss.values(), new_train_loss.values())
-                ]
-            )
+            for name, orig_val, new_val in zip(
+                orig_train_loss.keys(),
+                orig_train_loss.values(),
+                new_train_loss.values(),
+            ):
+                if not math.isclose(orig_val, new_val, rel_tol=tol):
+                    raise AssertionError(
+                        f"Training loss mismatch for '{name}': "
+                        f"original={orig_val}, new={new_val}, "
+                        f"diff={abs(orig_val - new_val)}, rel_tol={tol}"
+                    )
 
             # == test val metrics invariance to batch size ==
             batchsize1_val_metrics = nequip_module.val_metrics[0].metrics_values_epoch
             print(batchsize5_val_metrics)
             print(batchsize1_val_metrics)
             assert len(batchsize5_val_metrics) == len(batchsize1_val_metrics)
-            assert all(
-                [
-                    math.isclose(a, b, rel_tol=tol) if "maxabserr" not in name else True
-                    # ^ do not include maxabserr in testing
-                    for name, a, b in zip(
-                        batchsize5_val_metrics.keys(),
-                        batchsize5_val_metrics.values(),
-                        batchsize1_val_metrics.values(),
+            for name, batch5_val, batch1_val in zip(
+                batchsize5_val_metrics.keys(),
+                batchsize5_val_metrics.values(),
+                batchsize1_val_metrics.values(),
+            ):
+                # do not include maxabserr or total energy in testing (per atom energy tested)
+                if ("maxabserr" in name) or ("total_energy" in name):
+                    continue
+                if not math.isclose(batch5_val, batch1_val, rel_tol=tol):
+                    raise AssertionError(
+                        f"Validation metric mismatch for '{name}': "
+                        f"batch_size=5 value={batch5_val}, batch_size=1 value={batch1_val}, "
+                        f"diff={abs(batch5_val - batch1_val)}, rel_tol={tol}"
                     )
-                ]
-            )
 
     # TODO: will fail if train dataloader has shuffle=True
     def test_restarts(self, fake_model_training_session):
