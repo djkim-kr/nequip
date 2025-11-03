@@ -13,6 +13,7 @@ from nequip.nn import (
     ConvNetLayer,
     ForceStressOutput,
     ApplyFactor,
+    VectorReadout,
 )
 from nequip.nn.embedding import (
     NodeTypeEmbed,
@@ -483,16 +484,15 @@ def FullNequIPGNNEnergyModel_ncf(
         modules.update({f"layer{layer_i}_convnet": current_convnet})
 
     # === readout ===
-    # configure `ScalarMLP` to act as a linear scalar readout
-    # per_atom_energy_readout = ScalarMLP(
-    #     output_dim=1,
-    #     bias=False,
-    #     forward_weight_init=True,
-    #     field=AtomicDataDict.NODE_FEATURES_KEY,
-    #     out_field=AtomicDataDict.PER_ATOM_ENERGY_KEY,
-    #     irreps_in=prev_irreps_out,
-    # )
-
+    # configure `VectorReadout` to act as a vector readout
+    per_atom_direct_force_readout = VectorReadout(
+        irreps_in=prev_irreps_out,
+        field=AtomicDataDict.NODE_FEATURES_KEY,
+        out_field=AtomicDataDict.FORCE_KEY,
+        hidden_dim=16,
+        bias=False,
+    )
+    modules.update({"per_atom_direct_force_readout": per_atom_direct_force_readout})
 
     # === assemble in SequentialGraphNetwork ===
     return SequentialGraphNetwork(modules)
