@@ -309,7 +309,7 @@ def FullNequIPGNNModel(**kwargs) -> GraphModel:
 
 
 
-# @model_builder
+@model_builder
 def NequIPGNNEnergyModel_ncf(
     num_layers: int = 4,
     l_max: int = 1,
@@ -358,7 +358,7 @@ def NequIPGNNEnergyModel_ncf(
     )
     return model
 
-# @model_builder
+@model_builder
 def FullNequIPGNNEnergyModel_ncf(
     r_max: float,
     type_names: Sequence[str],
@@ -496,3 +496,8 @@ def FullNequIPGNNEnergyModel_ncf(
 
     # === assemble in SequentialGraphNetwork ===
     return SequentialGraphNetwork(modules)
+
+# assign docstring for the force+energy model
+NequIPGNNEnergyModel_ncf.__doc__ = _nequip_gnn_docstring(
+    "NequIP GNN model that predicts energies and forces (and stresses if cell is provided)."
+)
