@@ -1,15 +1,17 @@
 exclude: '.git|.tox'
-default_stages: [commit]
+default_stages: [pre-commit]
 fail_fast: true
 
 repos:
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.2
     hooks:
-      - id: black
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.1.0
+      # Run the linter (respects [tool.ruff.lint] in pyproject.toml)
+      - id: ruff
+        args: [--fix]
+      # Run the formatter (respects [tool.ruff.format] in pyproject.toml)
+      - id: ruff-format
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
     hooks:
-      - id: flake8
-        additional_dependencies: [Flake8-pyproject]
+      - id: yamllint
