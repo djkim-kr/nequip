@@ -135,12 +135,10 @@ nequip-compile \
   --target [ase|pair_nequip|pair_allegro|...]
 ```
 
-```{important}
-`nequip-compile` should be called on the same type of system and device where the compiled model will be used. This constraint may not be always be necessary for TorchScript compilation, but it is **required** for AOTInductor compilation, which specializes the model to a particular type of GPU, etc.
-```
+AOTInductor requires access to compilers like `gcc` and `nvcc` when running `nequip-compile`. Specifically, C++17 support is required, which requires `gcc` version 8 or higher (preferably >=11 where C++17 is the default). Without the proper compiler version, you may encounter errors such as `C++ compile error`, issues involving the `filesystem` standard library, or even `Segmentation fault (core dumped)`. You can check your `gcc` version with `gcc --version`, and may need to upgrade or load a specific module on your HPC system to get the required version before running `nequip-compile`.
 
 ```{important}
-AOTInductor requires access to compilers like `gcc` and `nvcc` when running `nequip-compile`. Specifically, C++17 support is required, which requires `gcc` version 8 or higher (preferably >=11 where C++17 is the default), otherwise errors involving the `filesystem` standard library will occur. You can check your `gcc` version with `gcc --version`, and may need to upgrade or load a specific module on your HPC system to get the required version.
+`nequip-compile` should be called on the same type of system and device where the compiled model will be used. This constraint may not be always be necessary for TorchScript compilation, but it is **required** for AOTInductor compilation, which specializes the model to a particular type of GPU, etc.
 ```
 
 ```{tip}
