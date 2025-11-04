@@ -15,7 +15,7 @@ from .grad_output import PartialForceOutput, ForceStressOutput
 from .misc import Concat, ApplyFactor, SaveForOutput
 from .utils import scatter, tp_path_exists, with_edge_vectors_
 from .model_modifier_utils import model_modifier, replace_submodules
-from .vector_readout import VectorReadout
+from .vector_readout import VectorReadout, VectorMultiReadout
 
 __all__ = [
     "GraphModel",
@@ -41,4 +41,5 @@ __all__ = [
     "model_modifier",
     "replace_submodules",
     "VectorReadout",
+    "VectorMultiReadout",
 ]

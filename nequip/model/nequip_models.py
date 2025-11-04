@@ -14,6 +14,7 @@ from nequip.nn import (
     ForceStressOutput,
     ApplyFactor,
     VectorReadout,
+    VectorMultiReadout,
 )
 from nequip.nn.embedding import (
     NodeTypeEmbed,
@@ -388,6 +389,9 @@ def FullNequIPGNNEnergyModel_ncf(
     convnet_nonlinearity_type: str = "gate",
     convnet_nonlinearity_scalars: Dict[int, Callable] = {"e": "silu", "o": "tanh"},
     convnet_nonlinearity_gates: Dict[int, Callable] = {"e": "silu", "o": "tanh"},
+
+    vector_readout_hidden_dims: list = [16],
+    vector_readout_bias: bool = False,
 ) -> GraphModel:
     """NequIP GNN model that predicts energies based on a more extensive set of arguments."""
     # === sanity checks and warnings ===
@@ -485,14 +489,23 @@ def FullNequIPGNNEnergyModel_ncf(
 
     # === readout ===
     # configure `VectorReadout` to act as a vector readout
-    per_atom_direct_force_readout = VectorReadout(
-        irreps_in=prev_irreps_out,
-        field=AtomicDataDict.NODE_FEATURES_KEY,
-        out_field=AtomicDataDict.FORCE_KEY,
-        hidden_dim=16,
-        bias=False,
+    # direct_force_readout = VectorReadout(
+    #     irreps_in=prev_irreps_out,
+    #     field=AtomicDataDict.NODE_FEATURES_KEY,
+    #     out_field=AtomicDataDict.FORCE_KEY,
+    #     hidden_dim=16,
+    #     bias=False,
+    # )
+
+    direct_force_readout = VectorMultiReadout(
+        irreps_in = prev_irreps_out,
+        field = AtomicDataDict.NODE_FEATURES_KEY,
+        out_field = AtomicDataDict.FORCE_KEY,
+        hidden_dims = vector_readout_hidden_dims,
+        bias = vector_readout_bias,
     )
-    modules.update({"per_atom_direct_force_readout": per_atom_direct_force_readout})
+    
+    modules.update({"direct_force_readout": direct_force_readout})
 
     # === assemble in SequentialGraphNetwork ===
     return SequentialGraphNetwork(modules)
