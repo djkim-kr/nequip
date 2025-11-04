@@ -18,9 +18,9 @@ To enable OpenEquivariance acceleration during training, use the {func}`~nequip.
 ```yaml
 training_module:
   _target_: nequip.train.EMALightningModule
-  
+
   # ... other training module configurations ...
-  
+
   model:
     _target_: nequip.model.modify
     modifiers:

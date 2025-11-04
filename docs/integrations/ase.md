@@ -152,7 +152,7 @@ force_max = 0.05  # run until the forces are smaller than this in eV/A
 
 # Initialize Nequip ASE Calculator from checkpoint
 calculator = NequIPCalculator.from_compiled_model(
-    compile_path=compile_path, 
+    compile_path=compile_path,
     device="cuda" if torch.cuda.is_available() else "cpu",
 )  # use GPUs if available
 

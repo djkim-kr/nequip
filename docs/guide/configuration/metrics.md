@@ -64,14 +64,14 @@ monitored_metric: val0_epoch/weighted_sum
 
 training_module:
   _target_: nequip.train.EMALightningModule
-  
+
   # Loss function
   loss:
     _target_: nequip.train.EnergyForceLoss
     coeffs:
       total_energy: 1.0
       forces: 1.0
-  
+
   # Validation metrics - weighted_sum will be used for monitoring
   val_metrics:
     _target_: nequip.train.EnergyForceMetrics
@@ -83,15 +83,15 @@ training_module:
 
 trainer:
   _target_: lightning.Trainer
-  
+
   callbacks:
     # Early stopping using the monitored metric
     - _target_: lightning.pytorch.callbacks.EarlyStopping
       monitor: ${monitored_metric}
       patience: 20
       min_delta: 1e-3
-    
-    # Model checkpointing using the monitored metric  
+
+    # Model checkpointing using the monitored metric
     - _target_: lightning.pytorch.callbacks.ModelCheckpoint
       monitor: ${monitored_metric}
       filename: best

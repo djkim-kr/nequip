@@ -1,7 +1,7 @@
 Data Fields
 ###########
 
-The NequIP infrastructure provides some ready-to-use data fields, such as ``total_energy``, ``forces``, ``stress``, etc. These are the names that should be referred to when using methods and classes in the NequIP package, such as the fields given to ``nequip.data.DataStatisticsManager`` or ``nequip.train.MetricsManager``. The data fields are broadly categorized (in a mutually exclusive manner) as graph (per-frame), node (per-atom), or edge fields (per-"bond"). 
+The NequIP infrastructure provides some ready-to-use data fields, such as ``total_energy``, ``forces``, ``stress``, etc. These are the names that should be referred to when using methods and classes in the NequIP package, such as the fields given to ``nequip.data.DataStatisticsManager`` or ``nequip.train.MetricsManager``. The data fields are broadly categorized (in a mutually exclusive manner) as graph (per-frame), node (per-atom), or edge fields (per-"bond").
 
 .. autodata:: nequip.data._GRAPH_FIELDS
 .. autodata:: nequip.data._NODE_FIELDS

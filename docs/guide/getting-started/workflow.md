@@ -34,7 +34,7 @@ The command line interface of `nequip-train` is managed by Hydra, and complete d
 
 The flags `-cp` and `-cn` refer to the "config path" and "config name" respectively. If one runs `nequip-train` in the same directory where the config file is located, the `-cp` flag may be omitted. Note also that the full path is usually required if one uses `-cp`. Users who seek further configurability (e.g. using relative paths, multiple config files located in different directories, etc) are directed to the "[command line flags](https://hydra.cc/docs/advanced/hydra-command-line-flags/)" page in the Hydra docs to learn more.
 
-Working directories for output files from `nequip-train` are [managed by Hydra](https://hydra.cc/docs/tutorials/basic/running_your_app/working_directory), and users can configure how these directories are organized through [Hydra's options](https://hydra.cc/docs/configure_hydra/workdir/). 
+Working directories for output files from `nequip-train` are [managed by Hydra](https://hydra.cc/docs/tutorials/basic/running_your_app/working_directory), and users can configure how these directories are organized through [Hydra's options](https://hydra.cc/docs/configure_hydra/workdir/).
 
 ### The config file
 Under the hood, the [Hydra](https://hydra.cc/) config utilities and the [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/) framework are used to facilitate training and testing in the NequIP infrastructure. The config defines a hierarchy of objects, built by instantiating classes, usually specified in the config with `_target_`, with the parameters the user provides. The Python API of these classes exactly corresponds to the available configuration options in the config file. As a result, the Python API of these classes is the single source of truth defining valid configuration options. These classes could come from:
@@ -114,7 +114,7 @@ See the [Fine-Tuning](../training-techniques/fine_tuning.md) training techniques
 
 ## Compilation
 
-`nequip-compile` is the command used to compile a model (either from a checkpoint file or a package file) for [production simulations](#production-simulations) with our various [integrations](../../integrations/all.rst). There are two compiler modes: `torchscript` and `aotinductor`, which produce compiled model files with extensions `.nequip.pth` and `.nequip.pt2` respectively. We generally recommend the newer and faster `aotinductor`, but it requires PyTorch 2.6 or later. 
+`nequip-compile` is the command used to compile a model (either from a checkpoint file or a package file) for [production simulations](#production-simulations) with our various [integrations](../../integrations/all.rst). There are two compiler modes: `torchscript` and `aotinductor`, which produce compiled model files with extensions `.nequip.pth` and `.nequip.pt2` respectively. We generally recommend the newer and faster `aotinductor`, but it requires PyTorch 2.6 or later.
 
 To compile a model with TorchScript:
 ```bash

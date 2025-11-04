@@ -9,7 +9,7 @@ Packaging converts checkpoint files (`.ckpt`) into package files (`.nequip.zip`)
 A package file contains:
 
 - Model weights and architecture
-- Snapshot of the implementation code  
+- Snapshot of the implementation code
 - Metadata and configuration
 - Example data for compilation
 

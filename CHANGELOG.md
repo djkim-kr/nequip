@@ -24,7 +24,7 @@ Most recent change on the top.
 
 ### Changed
 - Simplified metrics manager wrappers now include maximum absolute error metrics
-- [Breaking] `ChemicalSpeciesToAtomTypeMapper` and `NequIPCalculator` API changed for safety and better UI with regards to atom types when using pretrained models 
+- [Breaking] `ChemicalSpeciesToAtomTypeMapper` and `NequIPCalculator` API changed for safety and better UI with regards to atom types when using pretrained models
 - [Breaking] raise minimum PyTorch version for OpenEquivariance to PyTorch >= 2.7 (previously >= 2.4)
 
 ## [0.15.0]
@@ -234,7 +234,7 @@ A major backwards-incompatible update with breaking changes throughout the code.
 - Work with `wandb>=0.13.8`
 - Better error for standard deviation with too few data
 - `load_model_state` GPU -> CPU
-- No negative volumes in rare cases 
+- No negative volumes in rare cases
 
 ### Removed
 - [Breaking] `fixed_fields` machinery (`npz_fixed_field_keys` is still supported, but through a more straightforward implementation)
@@ -404,7 +404,7 @@ A major backwards-incompatible update with breaking changes throughout the code.
 - No atomic numbers in networks
 - `dataset_energy_std`/`dataset_energy_mean` to `dataset_total_energy_*`
 - `nequip.dynamics` -> `nequip.ase`
-- update example.yaml and full.yaml with better defaults, new loss function, and switched to toluene-ccsd(t) as example 
+- update example.yaml and full.yaml with better defaults, new loss function, and switched to toluene-ccsd(t) as example
 data
 - `use_sc` defaults to `True`
 - `register_fields` is now in `nequip.data`
