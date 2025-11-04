@@ -13,7 +13,6 @@ from nequip.nn import (
     ConvNetLayer,
     ForceStressOutput,
     ApplyFactor,
-    VectorReadout,
     VectorMultiReadout,
 )
 from nequip.nn.embedding import (
@@ -311,7 +310,7 @@ def FullNequIPGNNModel(**kwargs) -> GraphModel:
 
 
 @model_builder
-def NequIPGNNEnergyModel_ncf(
+def NequIPGNNDirectForceModel(
     num_layers: int = 4,
     l_max: int = 1,
     parity: bool = True,
@@ -349,7 +348,7 @@ def NequIPGNNEnergyModel_ncf(
     feature_irreps_hidden_list += [repr(o3.Irreps([(num_features, (1, -1))]))]
 
     # === build model ===
-    model = FullNequIPGNNEnergyModel_ncf(
+    model = FullNequIPGNNDirectForceModel(
         irreps_edge_sh=irreps_edge_sh,
         type_embed_num_features=num_features,
         feature_irreps_hidden=feature_irreps_hidden_list,
@@ -360,7 +359,7 @@ def NequIPGNNEnergyModel_ncf(
     return model
 
 @model_builder
-def FullNequIPGNNEnergyModel_ncf(
+def FullNequIPGNNDirectForceModel(
     r_max: float,
     type_names: Sequence[str],
     # convnet params
@@ -377,23 +376,17 @@ def FullNequIPGNNEnergyModel_ncf(
     polynomial_cutoff_p: int = 6,
     # edge sum normalization
     avg_num_neighbors: Optional[float] = None,
-    # per atom energy params
-    per_type_energy_scales: Optional[Union[float, Sequence[float]]] = None,
-    per_type_energy_shifts: Optional[Union[float, Sequence[float]]] = None,
-    per_type_energy_scales_trainable: Optional[bool] = False,
-    per_type_energy_shifts_trainable: Optional[bool] = False,
-    pair_potential: Optional[Dict] = None,
+    # vector readout params
+    vector_readout_hidden_dims: list = [16],
+    vector_readout_bias: bool = False,
     # == things that generally shouldn't be changed ==
     # convnet
     convnet_resnet: bool = False,
     convnet_nonlinearity_type: str = "gate",
     convnet_nonlinearity_scalars: Dict[int, Callable] = {"e": "silu", "o": "tanh"},
     convnet_nonlinearity_gates: Dict[int, Callable] = {"e": "silu", "o": "tanh"},
-
-    vector_readout_hidden_dims: list = [16],
-    vector_readout_bias: bool = False,
 ) -> GraphModel:
-    """NequIP GNN model that predicts energies based on a more extensive set of arguments."""
+    """NequIP GNN model that directly predicts forces based on a more extensive set of arguments."""
     # === sanity checks and warnings ===
     assert all(tn.isalnum() for tn in type_names), (
         "`type_names` must contain only alphanumeric characters"
@@ -416,14 +409,6 @@ def FullNequIPGNNEnergyModel_ncf(
     if avg_num_neighbors is None:
         warnings.warn(
             "Found `avg_num_neighbors=None` -- it is recommended to set `avg_num_neighbors` for normalization and better numerics during training."
-        )
-    if per_type_energy_scales is None:
-        warnings.warn(
-            "Found `per_type_energy_scales=None` -- it is recommended to set `per_type_energy_scales` for better numerics during training."
-        )
-    if per_type_energy_shifts is None:
-        warnings.warn(
-            "Found `per_type_energy_shifts=None` -- it is HIGHLY recommended to set `per_type_energy_shifts` as it determines the per-atom energies approaching the isolated atom regime."
         )
 
     # === encode and embed features ===
@@ -488,15 +473,7 @@ def FullNequIPGNNEnergyModel_ncf(
         modules.update({f"layer{layer_i}_convnet": current_convnet})
 
     # === readout ===
-    # configure `VectorReadout` to act as a vector readout
-    # direct_force_readout = VectorReadout(
-    #     irreps_in=prev_irreps_out,
-    #     field=AtomicDataDict.NODE_FEATURES_KEY,
-    #     out_field=AtomicDataDict.FORCE_KEY,
-    #     hidden_dim=16,
-    #     bias=False,
-    # )
-
+    # configure `VectorMultiReadout` to act as a vector readout
     direct_force_readout = VectorMultiReadout(
         irreps_in = prev_irreps_out,
         field = AtomicDataDict.NODE_FEATURES_KEY,
@@ -509,8 +486,3 @@ def FullNequIPGNNEnergyModel_ncf(
 
     # === assemble in SequentialGraphNetwork ===
     return SequentialGraphNetwork(modules)
-
-# assign docstring for the force+energy model
-NequIPGNNEnergyModel_ncf.__doc__ = _nequip_gnn_docstring(
-    "NequIP GNN model that predicts energies and forces (and stresses if cell is provided)."
-)

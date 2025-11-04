@@ -2,7 +2,7 @@
 from .utils import model_builder, override_model_compile_mode
 from .modify_utils import modify
 from .saved_models import ModelFromCheckpoint, ModelFromPackage
-from .nequip_models import NequIPGNNModel, NequIPGNNEnergyModel, FullNequIPGNNModel, FullNequIPGNNEnergyModel_ncf, NequIPGNNEnergyModel_ncf
+from .nequip_models import NequIPGNNModel, NequIPGNNEnergyModel, FullNequIPGNNModel, NequIPGNNDirectForceModel, FullNequIPGNNDirectForceModel
 from .pair_potential import ZBLPairPotential
 
 __all__ = [
@@ -14,5 +14,7 @@ __all__ = [
     "NequIPGNNModel",
     "NequIPGNNEnergyModel",
     "FullNequIPGNNModel",
+    "NequIPGNNDirectForceModel",
+    "FullNequIPGNNDirectForceModel",
     "ZBLPairPotential",
 ]
