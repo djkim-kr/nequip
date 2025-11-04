@@ -36,35 +36,27 @@ All additions should support CUDA/GPU. If possible, please test your changes on 
 
 ### Style Enforcement
 
-We use [`ruff`](https://docs.astral.sh/ruff/) for both code formatting and linting. Ruff is configured in `pyproject.toml` with the following settings:
+We use [`ruff`](https://docs.astral.sh/ruff/) for code formatting and linting, [`yamllint`](https://yamllint.readthedocs.io/) for YAML files, and additional hooks for file quality (trailing whitespace, end-of-file newlines, symlink validity, etc.). All tools are configured in `pyproject.toml` and `.pre-commit-config.yaml`.
 
-- Line length: 88 characters
-- Selected lint rules: E, F, W, C90 (pycodestyle errors, pyflakes, warnings, and complexity)
-- Ignored rules: E226, E501, E741, E743, C901, E203
-- Quote style: double quotes
-- Indentation: spaces
+#### Pre-commit hooks
 
-For YAML files, we use [`yamllint`](https://yamllint.readthedocs.io/) to ensure consistent formatting and catch syntax errors.
-
-Please run the formatter and linter before you commit:
+All contributors should use [pre-commit](https://pre-commit.com/) to run the same checks locally that CI runs. Pre-commit automatically manages all tool installations and configurations:
 
 ```bash
-ruff check .          # Run linting
-ruff format .         # Run formatting
+pip install pre-commit
+pre-commit install
 ```
 
-You can also check formatting without making changes:
+After installation, hooks run automatically on every commit. To manually run all hooks:
 
 ```bash
-ruff format --check .
+pre-commit run --all-files
 ```
 
-The formatter can be easily set up to run automatically on file save in various editors.
-
-You can also use ``pre-commit install`` to install a [pre-commit](https://pre-commit.com/) hook.
+All checks are configured in `.pre-commit-config.yaml` and match what runs in CI
 
 ```{tip}
-Install `ruff` and `yamllint` to run the linter and formatter locally. VSCode and PyCharm both have ruff extensions available for automatic formatting and linting.
+VSCode and PyCharm both have ruff extensions available for automatic formatting and linting on file save.
 ```
 
 ### Git Practices
