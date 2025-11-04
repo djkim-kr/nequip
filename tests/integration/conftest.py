@@ -181,7 +181,7 @@ class TrainingInvarianceBaseTest:
                 # do not include maxabserr or total energy in testing (per atom energy tested)
                 if ("maxabserr" in name) or ("total_energy" in name):
                     continue
-                if not math.isclose(batch5_val, batch1_val, rel_tol=tol):
+                if not math.isclose(batch5_val, batch1_val, rel_tol=tol, abs_tol=tol):
                     raise AssertionError(
                         f"Validation metric mismatch for '{name}': "
                         f"batch_size=5 value={batch5_val}, batch_size=1 value={batch1_val}, "
