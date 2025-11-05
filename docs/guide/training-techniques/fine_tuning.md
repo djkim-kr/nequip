@@ -80,6 +80,6 @@ There are a number of considerations and changes you may want to make to trainin
 
 Key differences to training from scratch are:
 
-- **Decrease the learning rate**: It is typically best to use a lower learning rate for fine-tuning a pre-trained model, compared to the optimal LR for from-scratch training. 
+- **Decrease the learning rate**: It is typically best to use a lower learning rate for fine-tuning a pre-trained model, compared to the optimal LR for from-scratch training.
 - **Update energy shifts**: As discussed above, you will likely want to update the atomic energy shifts of the model to match the settings (and thus absolute energies) of your data, to ensure smooth fine-tuning.
 - **Fixed model hyperparameters**: When fine-tuning, the architecture of the pre-trained model (number of layers _l_-max, radial cutoff etc. – e.g. provided on [nequip.net](https://www.nequip.net/)) cannot be modified. When comparing the performance of fine-tuning and from-scratch training, it is advised to use the same model hyperparameters for appropriate comparison.
