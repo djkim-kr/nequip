@@ -9,7 +9,7 @@ from nequip.utils.global_dtype import _GLOBAL_DTYPE
 from nequip.utils.compile import conditional_torchscript_jit
 from nequip.data import AtomicDataDict
 from .._graph_mixin import GraphModuleMixin
-from ..utils import with_edge_vectors_
+from ..utils import with_edge_vectors_, with_edge_type_
 from .utils import cutoff_partialdict_to_tensor
 
 from typing import Optional, List, Dict, Union
@@ -69,17 +69,13 @@ class EdgeLengthNormalizer(GraphModuleMixin, torch.nn.Module):
         # == get norm ==
         rmax_recip = self._rmax_recip
         if self._per_edge_type:
-            # get edge types with shape (2, num_edges) form first
-            edge_type = torch.index_select(
-                data[AtomicDataDict.ATOM_TYPE_KEY].view(-1),
-                0,
-                data[AtomicDataDict.EDGE_INDEX_KEY].view(-1),
-            ).view(2, -1)
-            data[self.edge_type_field] = edge_type
-            # then convert into row-major NxN matrix index with shape (num_edges,)
-            edge_type = edge_type[0] * self.num_types + edge_type[1]
+            # use helper to get edge types
+            data = with_edge_type_(data, self.edge_type_field)
+            edge_type = data[self.edge_type_field]
+            # convert to row-major NxN matrix index with shape (num_edges,)
+            edge_type_flat = edge_type[0] * self.num_types + edge_type[1]
             # (num_type^2,), (num_edges,) -> (num_edges, 1)
-            rmax_recip = torch.index_select(rmax_recip, 0, edge_type).unsqueeze(-1)
+            rmax_recip = torch.index_select(rmax_recip, 0, edge_type_flat).unsqueeze(-1)
         data[self.norm_length_field] = r * rmax_recip
         return data
 

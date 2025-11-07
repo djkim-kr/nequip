@@ -13,7 +13,7 @@ from .interaction_block import InteractionBlock
 from .convnetlayer import ConvNetLayer
 from .grad_output import PartialForceOutput, ForceStressOutput
 from .misc import Concat, ApplyFactor, SaveForOutput
-from .utils import scatter, tp_path_exists, with_edge_vectors_
+from .utils import scatter, tp_path_exists, with_edge_vectors_, with_edge_type_
 from .model_modifier_utils import model_modifier, replace_submodules
 
 __all__ = [
@@ -37,6 +37,7 @@ __all__ = [
     "scatter",
     "tp_path_exists",
     "with_edge_vectors_",
+    "with_edge_type_",
     "model_modifier",
     "replace_submodules",
 ]
