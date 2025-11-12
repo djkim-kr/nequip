@@ -15,7 +15,6 @@ from nequip.data import (
     to_ase,
     compute_neighborlist_,
 )
-from nequip.data._nl import neighbor_list_and_relative_vec
 from nequip.utils.test import compare_neighborlists
 
 # check for optional neighborlist libraries
@@ -110,12 +109,11 @@ def test_without_nodes(CH3CHO):
 
 def test_silicon_neighbors(Si):
     r_max, points, data = Si
-    edge_index, cell_shifts, cell = neighbor_list_and_relative_vec(
-        points[AtomicDataDict.POSITIONS_KEY],
-        pbc=True,
-        cell=points[AtomicDataDict.CELL_KEY],
+    test_data = compute_neighborlist_(
+        from_dict(points),
         r_max=r_max,
     )
+    edge_index = test_data[AtomicDataDict.EDGE_INDEX_KEY]
     edge_index_true = torch.LongTensor(
         [[0, 0, 0, 0, 1, 1, 1, 1], [1, 1, 1, 1, 0, 0, 0, 0]]
     )
