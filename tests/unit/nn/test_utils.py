@@ -69,7 +69,7 @@ def test_positions_grad(periodic, CH3CHO, Cu_bulk):
 def test_some_periodic():
     # monolayer in xy,
     # only periodic in xy
-    atoms = ase.build.fcc111("Al", size=(3, 3, 1), vacuum=0.0)
+    atoms = ase.build.fcc111("Al", size=(3, 3, 1), vacuum=10.0)
     assert all(atoms.pbc == (True, True, False))
     data = compute_neighborlist_(
         from_ase(atoms), r_max=2.9
