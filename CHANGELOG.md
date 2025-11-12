@@ -18,6 +18,7 @@ Most recent change on the top.
 - OpenEquivariance is now compatible with AOTInductor compilation for ASE inference with PyTorch >= 2.9
 - better handling of datasets where stresses are partially populated, e.g. `AddNaNStressTransform` added to add NaN stress tensors for structures without stress data
 - automatic caching for nequip.net models
+- per-type average number of neighbors normalization option
 
 ### Removed
 - [Breaking] `NequIPGNNEnergyModel` has been removed. Energy-only models can be constructed by using `NequIPGNNModel` with a new argument `do_derivatives=False`
