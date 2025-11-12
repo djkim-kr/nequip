@@ -71,6 +71,12 @@ def neighbor_list_and_relative_vec(
     if isinstance(pbc, bool):
         pbc = (pbc,) * 3
 
+    # check that cell is provided if PBC is requested
+    if (pbc[0] or pbc[1] or pbc[2]) and cell is None:
+        raise ValueError(
+            "Periodic boundary conditions requested but no cell was provided."
+        )
+
     # Either the position or the cell may be on the GPU as tensors
     if isinstance(pos, torch.Tensor):
         temp_pos = pos.detach().cpu().numpy()
