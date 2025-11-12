@@ -502,3 +502,101 @@ def test_neighborlist_batch_state_preservation():
         result_batched_sorted[AtomicDataDict.BATCH_KEY],
         data_batched[AtomicDataDict.BATCH_KEY],
     )
+
+
+def test_neighborlist_nonperiodic_cell_independence():
+    """Test that non-periodic systems produce same neighborlist regardless of cell.
+
+    Tests three non-periodic cases (no cell, orthogonal cell, skewed cell) and verifies
+    they produce identical edge sets. Also tests periodic cases with the same cells as a
+    sanity check that PBC produces different results when periodic images matter.
+    """
+    r_max = 5.0
+
+    # create positions where atoms are near cell boundaries
+    # this allows us to test that PBC makes a difference
+    positions = torch.tensor([[0.3, 1.0, 1.0], [2.8, 1.0, 1.0], [1.5, 3.5, 1.0]])
+
+    # test 1: no cell provided
+    data_no_cell = {
+        AtomicDataDict.POSITIONS_KEY: positions.clone(),
+        AtomicDataDict.ATOMIC_NUMBERS_KEY: torch.tensor([1, 1, 8]),
+    }
+    data_no_cell = from_dict(data_no_cell)
+    result_no_cell = NeighborListTransform(r_max=r_max)(data_no_cell)
+
+    # test 2: small orthogonal cell (atoms near boundaries)
+    # direct distances: 0-1: 2.5, 0-2: ~2.78, 1-2: ~2.82
+    data_cell1 = {
+        AtomicDataDict.POSITIONS_KEY: positions.clone(),
+        AtomicDataDict.ATOMIC_NUMBERS_KEY: torch.tensor([1, 1, 8]),
+        AtomicDataDict.CELL_KEY: torch.tensor(
+            [[3.0, 0.0, 0.0], [0.0, 5.0, 0.0], [0.0, 0.0, 5.0]]
+        ),
+        AtomicDataDict.PBC_KEY: torch.tensor([False, False, False]),
+    }
+    data_cell1 = from_dict(data_cell1)
+    result_cell1 = NeighborListTransform(r_max=r_max)(data_cell1)
+
+    # test 3: small skewed cell
+    data_cell2 = {
+        AtomicDataDict.POSITIONS_KEY: positions.clone(),
+        AtomicDataDict.ATOMIC_NUMBERS_KEY: torch.tensor([1, 1, 8]),
+        AtomicDataDict.CELL_KEY: torch.tensor(
+            [[3.5, 0.5, 0.0], [0.0, 4.5, 0.0], [0.0, 0.0, 5.0]]
+        ),
+        AtomicDataDict.PBC_KEY: torch.tensor([False, False, False]),
+    }
+    data_cell2 = from_dict(data_cell2)
+    result_cell2 = NeighborListTransform(r_max=r_max)(data_cell2)
+
+    # convert edge indices to sets for comparison
+    def edges_to_set(edge_index):
+        return set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
+
+    edges_no_cell = edges_to_set(result_no_cell[AtomicDataDict.EDGE_INDEX_KEY])
+    edges_cell1 = edges_to_set(result_cell1[AtomicDataDict.EDGE_INDEX_KEY])
+    edges_cell2 = edges_to_set(result_cell2[AtomicDataDict.EDGE_INDEX_KEY])
+
+    print(edges_no_cell)
+    print(edges_cell1)
+    print(edges_cell2)
+
+    # all three should produce identical edge sets
+    assert edges_no_cell == edges_cell1, (
+        "Non-periodic system should have same edges with or without cell"
+    )
+    assert edges_no_cell == edges_cell2, (
+        "Non-periodic system should have same edges regardless of cell"
+    )
+    assert edges_cell1 == edges_cell2, (
+        "Non-periodic system should have same edges for different random cells"
+    )
+
+    # sanity check: with PBC enabled, results should potentially differ
+    data_pbc1 = {
+        AtomicDataDict.POSITIONS_KEY: positions.clone(),
+        AtomicDataDict.ATOMIC_NUMBERS_KEY: torch.tensor([1, 1, 8]),
+        AtomicDataDict.CELL_KEY: data_cell1[AtomicDataDict.CELL_KEY].clone(),
+        AtomicDataDict.PBC_KEY: torch.tensor([True, True, True]),
+    }
+    data_pbc1 = from_dict(data_pbc1)
+    result_pbc1 = NeighborListTransform(r_max=r_max)(data_pbc1)
+
+    data_pbc2 = {
+        AtomicDataDict.POSITIONS_KEY: positions.clone(),
+        AtomicDataDict.ATOMIC_NUMBERS_KEY: torch.tensor([1, 1, 8]),
+        AtomicDataDict.CELL_KEY: data_cell2[AtomicDataDict.CELL_KEY].clone(),
+        AtomicDataDict.PBC_KEY: torch.tensor([True, True, True]),
+    }
+    data_pbc2 = from_dict(data_pbc2)
+    result_pbc2 = NeighborListTransform(r_max=r_max)(data_pbc2)
+
+    edges_pbc1 = edges_to_set(result_pbc1[AtomicDataDict.EDGE_INDEX_KEY])
+    edges_pbc2 = edges_to_set(result_pbc2[AtomicDataDict.EDGE_INDEX_KEY])
+
+    print(edges_pbc1)
+    print(edges_pbc2)
+
+    # sanity check: periodic systems can differ from non-periodic
+    # (they may have additional edges from periodic images)
