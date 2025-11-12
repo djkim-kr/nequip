@@ -8,6 +8,7 @@ Present and past contributors include, in alphabetical order by last name:
  - Olav Førland
  - [Mario Geiger](https://mariogeiger.ch/)
  - Austin Glover
+ - Gil Harari
  - Y. Richard Hu
  - Anders Johansson
  - [Seán Kavanagh](https://seankavanagh.com/)
