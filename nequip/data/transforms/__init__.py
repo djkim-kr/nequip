@@ -10,6 +10,9 @@ from .stress_utils import (
     StressSignFlipTransform,
     AddNaNStressTransform,
 )
+from .cell_utils import (
+    NonPeriodicCellTransform,
+)
 
 __all__ = [
     "ChemicalSpeciesToAtomTypeMapper",
@@ -19,4 +22,5 @@ __all__ = [
     "VirialToStressTransform",
     "StressSignFlipTransform",
     "AddNaNStressTransform",
+    "NonPeriodicCellTransform",
 ]
