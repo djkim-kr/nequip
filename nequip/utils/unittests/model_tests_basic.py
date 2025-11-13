@@ -314,6 +314,10 @@ class BasicModelTestsMixin:
             ]:
                 continue
             if out_field in _GRAPH_FIELDS:
+                # this condition is to account for models that may produce empty dummy tensors for certain fields
+                # e.g. nonperiodic systems without a cell may produce empty stress tensors
+                if output[out_field].numel() == 0:
+                    continue
                 assert allclose(
                     output1[out_field],
                     output[out_field][0],
