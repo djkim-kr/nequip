@@ -247,6 +247,12 @@ class ForceStressOutput(GraphModuleMixin, torch.nn.Module):
                 # Note the .abs(), since volume should always be positive
                 # det is equal to a dot (b cross c)
                 volume = torch.linalg.det(cell).abs().unsqueeze(-1)
+
+                # NOTE: to support batching periodic and non-periodic structures together,
+                # the data processing stage is responsible for ensuring that:
+                # 1. non-periodic systems have a finite dummy cell to prevent infs in the division below
+                # 2. stress labels for non-periodic systems are NaN and handled with `ignore_nan` in loss and metrics
+
                 stress = virial / volume.view(num_batch, 1, 1)
                 data[AtomicDataDict.CELL_KEY] = orig_cell
             else:
