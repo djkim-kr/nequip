@@ -24,6 +24,12 @@ class TestZBLModel(EnergyModelTestsMixin):
     Inherits from EnergyModelTestsMixin directly to get basic + energy tests.
     """
 
+    @pytest.fixture(scope="class")
+    def equivariance_tol(self, model_dtype):
+        # CI fails with at most 6e-8 errors for fp64 models for PyTorch 2.9.1
+        # so fp64 tol bumped to 1e-7
+        return {"float32": 1e-3, "float64": 1e-7}[model_dtype]
+
     @pytest.fixture
     def strict_locality(self):
         return True
