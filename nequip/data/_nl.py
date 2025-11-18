@@ -29,7 +29,7 @@ assert _NEQUIP_NL in [
 ], f"Unknown neighborlist NEQUIP_NL = {_NEQUIP_NL}"
 
 
-def _neighbor_list_and_relative_vec(
+def _nl_fn(
     pos: torch.Tensor,
     r_max: float,
     cell: Optional[torch.Tensor] = None,
@@ -158,7 +158,7 @@ def compute_neighborlist_(
         if pbc is not None:
             pbc = pbc.view(3)  # remove batch dimension
 
-        edge_index, edge_cell_shift = _neighbor_list_and_relative_vec(
+        edge_index, edge_cell_shift = _nl_fn(
             pos=data_per_frame[AtomicDataDict.POSITIONS_KEY],
             r_max=r_max,
             cell=cell,
