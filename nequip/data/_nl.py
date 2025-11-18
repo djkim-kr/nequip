@@ -2,7 +2,6 @@
 from typing import Final, List, Optional, Union, Tuple
 
 import os
-import warnings
 import numpy as np
 
 import torch
@@ -50,7 +49,7 @@ def _nl_fn(
         pos (torch.Tensor shape [N, 3]): Positional coordinates.
         r_max (float): Radial cutoff distance for neighbor finding.
         cell (torch.Tensor shape [3, 3] or None): Cell for periodic boundary conditions. Required if any ``pbc`` is True.
-        pbc (bool or 3-tuple of bool): Whether the system is periodic in each of the three cell dimensions.
+        pbc (bool or 3-tuple of bool or torch.Tensor): Whether the system is periodic in each of the three cell dimensions.
         NL (str): Neighborlist backend to use ('ase', 'matscipy', or 'vesin').
 
     Returns:
@@ -59,17 +58,18 @@ def _nl_fn(
     """
     if isinstance(pbc, bool):
         pbc = (pbc,) * 3
+    elif isinstance(pbc, torch.Tensor):
+        # convert tensor to tuple for backends (handles GPU tensors)
+        pbc = tuple(pbc.detach().cpu().tolist())
 
     # get device and dtype from position tensor
     out_device = pos.device
     out_dtype = pos.dtype
 
-    # right now, GPU tensors require a round trip
-    # TODO: potentially implement GPU-GPU neighborlists
-    if out_device.type != "cpu":
-        warnings.warn(
-            "Currently, neighborlists require a round trip to the CPU. Please pass CPU tensors if possible."
-        )
+    # NOTE: neighborlist backends (ase, matscipy, vesin) are CPU-only
+    # - For training: data is typically on CPU, so no transfer occurs
+    # - For inference (e.g., torchsim): GPU -> CPU transfer is expected and normal
+    # TODO: potentially implement GPU-native neighborlists in the future
 
     # convert to numpy for neighborlist backends
     temp_pos = pos.detach().cpu().numpy()
