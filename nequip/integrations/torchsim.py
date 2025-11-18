@@ -303,7 +303,6 @@ class NequIPTorchSimCalc(ModelInterface):
 
         # === TS neighborlist construction ===
         edge_indices = []
-        shifts_list = []
         unit_shifts_list = []
         offset = 0
 
@@ -320,18 +319,15 @@ class NequIPTorchSimCalc(ModelInterface):
 
             # adjust indices for the batch
             edge_idx = edge_idx + offset
-            shifts = torch.mm(shifts_idx, sim_state.row_vector_cell[sys_idx])
 
             edge_indices.append(edge_idx)
             unit_shifts_list.append(shifts_idx)
-            shifts_list.append(shifts)
 
             offset += len(sim_state.positions[system_idx_mask])
 
         # combine all neighbor lists
         edge_index = torch.cat(edge_indices, dim=1)
         unit_shifts = torch.cat(unit_shifts_list, dim=0)
-        shifts = torch.cat(shifts_list, dim=0)
 
         # === prepare raw dict ===
         data: dict[str, torch.Tensor] = {
