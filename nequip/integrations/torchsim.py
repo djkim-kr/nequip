@@ -5,7 +5,6 @@ import torch
 
 import torch_sim as ts
 from torch_sim.models.interface import ModelInterface
-from torch_sim.neighbors import vesin_nl_ts
 from torch_sim.typing import StateDict
 
 from nequip.data import AtomicDataDict
@@ -33,8 +32,8 @@ class NequIPTorchSimCalc(ModelInterface):
         device (str or :class:`torch.device`): device for model to evaluate on,
             e.g. ``"cpu"`` or ``"cuda"`` (default: ``"cpu"``)
         transforms (List[Callable]): list of data transforms
-        neighbor_list_fn (Callable): function to compute neighbor lists
-            (default: ``vesin_nl_ts``)
+        neighbor_list_backend (str): neighborlist backend to use: ``"ase"``, ``"matscipy"``, or ``"vesin"``
+            (default: ``"matscipy"``)
         atomic_numbers (:class:`torch.Tensor` or None): atomic numbers with shape
             ``[n_atoms]``. If provided at initialization, cannot be provided
             again during forward pass
@@ -49,7 +48,7 @@ class NequIPTorchSimCalc(ModelInterface):
         r_max: float,
         device: Union[str, torch.device] = "cpu",
         transforms: List[Callable] = [],
-        neighbor_list_fn: Callable = vesin_nl_ts,
+        neighbor_list_backend: str = "matscipy",
         atomic_numbers: torch.Tensor | None = None,
         system_idx: torch.Tensor | None = None,
     ) -> None:
@@ -70,7 +69,7 @@ class NequIPTorchSimCalc(ModelInterface):
         self._compute_stress = True
         self._memory_scales_with = "n_atoms_x_density"
 
-        self.neighbor_list_fn = neighbor_list_fn
+        self.neighbor_list_backend = neighbor_list_backend
 
         if not isinstance(model, torch.nn.Module):
             raise TypeError("Invalid model type. Must be a torch.nn.Module.")
@@ -176,13 +175,21 @@ class NequIPTorchSimCalc(ModelInterface):
         if "transforms" in kwargs:
             raise KeyError("`transforms` not allowed here")
 
+        # extract neighbor_list_backend from kwargs if provided
+        neighbor_list_backend = kwargs.pop("neighbor_list_backend", "matscipy")
+
         return cls(
             model=model,
             r_max=r_max,
             device=device,
             transforms=_basic_transforms(
-                metadata, r_max, type_names, chemical_species_to_atom_type_map
+                metadata,
+                r_max,
+                type_names,
+                chemical_species_to_atom_type_map,
+                neighbor_list_backend,
             ),
+            neighbor_list_backend=neighbor_list_backend,
             **kwargs,
         )
 
@@ -230,13 +237,21 @@ class NequIPTorchSimCalc(ModelInterface):
         if "transforms" in kwargs:
             raise KeyError("`transforms` not allowed here")
 
+        # extract neighbor_list_backend from kwargs if provided
+        neighbor_list_backend = kwargs.pop("neighbor_list_backend", "matscipy")
+
         return cls(
             model=model,
             r_max=r_max,
             device=device,
             transforms=_basic_transforms(
-                model.metadata, r_max, type_names, chemical_species_to_atom_type_map
+                model.metadata,
+                r_max,
+                type_names,
+                chemical_species_to_atom_type_map,
+                neighbor_list_backend,
             ),
+            neighbor_list_backend=neighbor_list_backend,
             **kwargs,
         )
 
@@ -301,43 +316,25 @@ class NequIPTorchSimCalc(ModelInterface):
         ):
             self.setup_from_system_idx(sim_state.atomic_numbers, sim_state.system_idx)
 
-        # === TS neighborlist construction ===
-        edge_indices = []
-        unit_shifts_list = []
-        offset = 0
-
-        # TODO (AG): currently doesn't work for batched neighbor lists
-        for sys_idx in range(self.n_systems):
-            system_idx_mask = sim_state.system_idx == sys_idx
-            # calculate neighbor list for this system
-            edge_idx, shifts_idx = self.neighbor_list_fn(
-                positions=sim_state.positions[system_idx_mask],
-                cell=sim_state.row_vector_cell[sys_idx],
-                pbc=sim_state.pbc,
-                cutoff=self.r_max,
-            )
-
-            # adjust indices for the batch
-            edge_idx = edge_idx + offset
-
-            edge_indices.append(edge_idx)
-            unit_shifts_list.append(shifts_idx)
-
-            offset += len(sim_state.positions[system_idx_mask])
-
-        # combine all neighbor lists
-        edge_index = torch.cat(edge_indices, dim=1)
-        unit_shifts = torch.cat(unit_shifts_list, dim=0)
-
         # === prepare raw dict ===
+        # convert PBC to tensor with shape [n_systems, 3] for batched data
+        pbc = sim_state.pbc
+        # the following logic accounts for torch-sim change:
+        # https://github.com/TorchSim/torch-sim/pull/320
+        if isinstance(pbc, bool):
+            # previously, pbc is a bool
+            pbc = torch.tensor([pbc] * 3, dtype=torch.bool, device=self._device)
+        # after PR, pbc is already a tensor with shape [3]
+        # expand to [n_systems, 3] for batched processing
+        pbc_tensor = pbc.unsqueeze(0).expand(self.n_systems, 3)
+
         data: dict[str, torch.Tensor] = {
             AtomicDataDict.POSITIONS_KEY: sim_state.positions,
             AtomicDataDict.CELL_KEY: sim_state.row_vector_cell,
+            AtomicDataDict.PBC_KEY: pbc_tensor,
             AtomicDataDict.BATCH_KEY: sim_state.system_idx,
             AtomicDataDict.NUM_NODES_KEY: sim_state.system_idx.bincount(),
             AtomicDataDict.ATOMIC_NUMBERS_KEY: sim_state.atomic_numbers,
-            AtomicDataDict.EDGE_INDEX_KEY: edge_index,
-            AtomicDataDict.EDGE_CELL_SHIFT_KEY: unit_shifts,
         }
 
         # === apply transforms ===
@@ -374,11 +371,12 @@ def _basic_transforms(
     r_max: float,
     type_names: List[str],
     chemical_species_to_atom_type_map: Dict[str, str],
+    neighbor_list_backend: str = "matscipy",
 ) -> List[Callable]:
-    """Create transform list with optional pruning based on per-edge-type cutoffs."""
+    """Create transform list with neighborlist construction and optional per-edge-type cutoff pruning."""
     from nequip.data.transforms import (
         ChemicalSpeciesToAtomTypeMapper,
-        NeighborListPruneTransform,
+        NeighborListTransform,
     )
     from nequip.nn.embedding.utils import cutoff_str_to_fulldict
 
@@ -389,7 +387,9 @@ def _basic_transforms(
         )
     ]
 
-    # add pruning transform if per-edge-type cutoffs are available
+    # add neighborlist transform with optional per-edge-type cutoffs
+    nl_kwargs = {"NL": neighbor_list_backend}
+
     if metadata.get(graph_model.PER_EDGE_TYPE_CUTOFF_KEY, None) is not None:
         per_edge_type_cutoff = metadata[graph_model.PER_EDGE_TYPE_CUTOFF_KEY]
         if isinstance(per_edge_type_cutoff, str):
@@ -398,11 +398,14 @@ def _basic_transforms(
             )
 
         transforms.append(
-            NeighborListPruneTransform(
+            NeighborListTransform(
                 r_max=r_max,
                 per_edge_type_cutoff=per_edge_type_cutoff,
                 type_names=type_names,
+                **nl_kwargs,
             )
         )
+    else:
+        transforms.append(NeighborListTransform(r_max=r_max, **nl_kwargs))
 
     return transforms
