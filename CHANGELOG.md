@@ -9,6 +9,8 @@ Most recent change on the top.
 ## Unreleased
 
 
+## [0.16.0]
+
 ### Added
 - users can specify having irreps of different multiplicites in `NequIPGNNModel` by providing `num_features` that is a list of `l_max + 1` features. E.g. for `l_max=2` and `parity=False`, `num_features=[5, 2, 7]` refers to `5x0e`, `2x1o` and `7x2e` features (see `configs/tutorial.yaml` for an example)
 - users can specify `type_embed_num_features` as a separate hyperparameter to control the number of features in the type embedding layer (defaults to `num_features[0]`)
@@ -19,6 +21,7 @@ Most recent change on the top.
 - better handling of datasets where stresses are partially populated, e.g. `AddNaNStressTransform` added to add NaN stress tensors for structures without stress data
 - automatic caching for nequip.net models
 - per-type average number of neighbors normalization option
+- torch-sim integration with `NequIPTorchSimCalc` for batched GPU evaluation of compiled NequIP and Allegro models
 
 ### Removed
 - [Breaking] `NequIPGNNEnergyModel` has been removed. Energy-only models can be constructed by using `NequIPGNNModel` with a new argument `do_derivatives=False`
