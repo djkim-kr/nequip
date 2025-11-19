@@ -41,6 +41,28 @@ This argument defaults to an identity mapping when the type names from the packa
 If the pretrained model used custom type names (e.g., "my_H", "carbon"), you would need to explicitly provide the mapping.
 
 
+## Specifying Cutoff Radius
+
+When fine-tuning, you must use the same cutoff radius (`r_max`) that the pretrained model was trained with. Using a different cutoff radius will result in incorrect neighbor list construction and poor model performance.
+
+For models from [nequip.net](https://www.nequip.net/), the `r_max` value is provided in the model's metadata on the website. Set this value explicitly in your config:
+
+```yaml
+cutoff_radius: 6.0  # must be the same r_max as the pretrained model
+
+data:
+  # ...
+  transforms:
+    - _target_: nequip.data.transforms.NeighborListTransform
+      r_max: ${cutoff_radius}
+      # ...
+```
+
+```{important}
+Using a different `r_max` than the pretrained model will cause the model to fail or produce incorrect results, as the neighbor list structure will be inconsistent with what the model expects.
+```
+
+
 ## Modifying Per-Type Energy Shifts and Scales
 
 To account for different DFT (or other simulation) settings, which can lead to different reference energies between datasets, users can modify the per-atom-type energy `shifts` and `scales` by specifying `modify_PerTypeScaleShift` with {func}`~nequip.model.modify` (see API for {class}`~nequip.nn.atomwise.PerTypeScaleShift`).
@@ -82,4 +104,4 @@ Key differences to training from scratch are:
 
 - **Decrease the learning rate**: It is typically best to use a lower learning rate for fine-tuning a pre-trained model, compared to the optimal LR for from-scratch training.
 - **Update energy shifts**: As discussed above, you will likely want to update the atomic energy shifts of the model to match the settings (and thus absolute energies) of your data, to ensure smooth fine-tuning.
-- **Fixed model hyperparameters**: When fine-tuning, the architecture of the pre-trained model (number of layers _l_-max, radial cutoff etc. – e.g. provided on [nequip.net](https://www.nequip.net/)) cannot be modified. When comparing the performance of fine-tuning and from-scratch training, it is advised to use the same model hyperparameters for appropriate comparison.
+- **Fixed model hyperparameters**: When fine-tuning, the architecture of the pre-trained model (number of layers, _l_-max, radial cutoff, etc. – e.g. provided on [nequip.net](https://www.nequip.net/)) cannot be modified. You must use the same `r_max` as the pretrained model (see [Specifying Cutoff Radius](#specifying-cutoff-radius)). When comparing the performance of fine-tuning and from-scratch training, it is advised to use the same model hyperparameters for appropriate comparison.
