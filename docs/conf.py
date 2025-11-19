@@ -45,6 +45,9 @@ autodoc_member_order = "bysource"
 autosummary_generate = True
 source_suffix = [".rst", ".md"]
 
+# mock imports for optional dependencies not available in docs build environment
+autodoc_mock_imports = ["torch_sim"]
+
 # Intersphinx configuration
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
