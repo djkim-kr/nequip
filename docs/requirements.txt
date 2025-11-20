@@ -2,4 +2,5 @@ myst-parser
 sphinx_copybutton
 furo
 torch
+torch-sim-atomistic
 pygments-lammps

@@ -46,7 +46,7 @@ autosummary_generate = True
 source_suffix = [".rst", ".md"]
 
 # mock imports for optional dependencies not available in docs build environment
-autodoc_mock_imports = ["torch_sim"]
+autodoc_mock_imports = []
 
 # Intersphinx configuration
 intersphinx_mapping = {
